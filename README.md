@@ -20,15 +20,17 @@ A fast, minimal, markdown-based note-taking app. See [rook-prd.md](rook-prd.md) 
 ## Architecture
 
 ```
-┌─────────────┐     SSE      ┌─────────────┐     JSON file
-│  React App  │◄────────────►│  Express API │────────────►  data/notes.json
-│  :5173      │  fetch/proxy  │  :3001       │
-└─────────────┘               └──────▲───────┘
-                                     │ HTTP
-                              ┌──────┴───────┐
-                              │  MCP Server  │
-                              │  :3002/mcp   │
-                              └──────────────┘
+                                              data/notes.json
+                                                   ▲
+┌─────────────┐   SSE + fetch   ┌─────────────┐    │ JSON
+│  React App  │◄───────────────►│ Express API │────┘
+│   :5173     │                 │   :3001     │
+└─────────────┘                 └──────▲──────┘
+                                       │ HTTP
+                                ┌──────┴──────┐
+                                │ MCP Server  │
+                                │  :3002/mcp  │
+                                └─────────────┘
 ```
 
 - **MCP is a consumer of the HTTP API** — it does not import `store.ts` directly. This means extending the data model only requires changes in `schemas.ts` + `store.ts`.
@@ -133,4 +135,4 @@ Then open http://localhost:5173 for the app, http://localhost:3001/docs for API 
 
 ## Task Tracking
 
-See [tasks.md](tasks.md) for completed phases and current status.
+See [tasks.md](plans/tasks.md) for completed phases and current status.
