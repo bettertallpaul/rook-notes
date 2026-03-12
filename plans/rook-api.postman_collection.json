@@ -1,0 +1,99 @@
+{
+  "info": {
+    "name": "Rook API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "noteId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "List notes",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/notes"
+      }
+    },
+    {
+      "name": "Search notes",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/notes?q=hello",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "notes"],
+          "query": [{ "key": "q", "value": "hello" }]
+        }
+      }
+    },
+    {
+      "name": "Create note",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "pm.collectionVariables.set('noteId', res.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/notes",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"My note\",\n  \"content\": \"Some content here\",\n  \"labels\": [\"demo\"]\n}"
+        }
+      }
+    },
+    {
+      "name": "Get note",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/notes/{{noteId}}"
+      }
+    },
+    {
+      "name": "Update note",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/api/notes/{{noteId}}",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Updated title\",\n  \"content\": \"Updated content\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Add label",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/notes/{{noteId}}/labels",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"label\": \"important\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Remove label",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/notes/{{noteId}}/labels/important"
+      }
+    },
+    {
+      "name": "Delete note",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/notes/{{noteId}}"
+      }
+    }
+  ]
+}

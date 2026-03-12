@@ -1,0 +1,118 @@
+{
+  "info": {
+    "name": "Rook MCP Server",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "MCP JSON-RPC calls to the Rook notes server at http://localhost:3002/mcp. The MCP server exposes 4 intent-based tools that consume the HTTP API."
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3002" },
+    { "key": "note_id", "value": "<paste-a-note-id-here>" }
+  ],
+  "item": [
+    {
+      "name": "Initialize",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/mcp",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"initialize\",\n  \"params\": {\n    \"protocolVersion\": \"2025-03-26\",\n    \"capabilities\": {},\n    \"clientInfo\": { \"name\": \"postman\", \"version\": \"1.0\" }\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "List Tools",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/mcp",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/list\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Search Notes",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/mcp",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"search_notes\",\n    \"arguments\": { \"query\": \"Docker\" }\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "Search Notes (list all)",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/mcp",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"search_notes\",\n    \"arguments\": {}\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "Create Note",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/mcp",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"create_note\",\n    \"arguments\": {\n      \"title\": \"MCP Test Note\",\n      \"content\": \"Created via MCP JSON-RPC\",\n      \"labels\": [\"mcp\", \"test\"]\n    }\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "Edit Note",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/mcp",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"edit_note\",\n    \"arguments\": {\n      \"id\": \"{{note_id}}\",\n      \"title\": \"Updated via MCP\",\n      \"content\": \"New content from Postman\",\n      \"labels\": [\"updated\", \"mcp\"]\n    }\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "Delete Note",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/mcp",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"delete_note\",\n    \"arguments\": { \"id\": \"{{note_id}}\" }\n  }\n}"
+        }
+      }
+    }
+  ]
+}
