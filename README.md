@@ -1,6 +1,6 @@
-# Rook
+# Rook Notes
 
-> A fast, minimal, markdown-based note-taking app.
+> A fast, minimal, markdown-based note-taking app — built as a playground for MCP servers and AI-assisted development.
 
 ## What is Rook?
 
