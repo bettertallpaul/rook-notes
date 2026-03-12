@@ -1,6 +1,6 @@
-# Rook — Context Capsule
+# Rook
 
-> Quick-start reference for a new Claude Code session. Read this first.
+> A fast, minimal, markdown-based note-taking app.
 
 ## What is Rook?
 
