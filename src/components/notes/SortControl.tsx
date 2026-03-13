@@ -14,7 +14,7 @@ export function SortControl() {
     <select
       value={sortMode}
       onChange={e => setSortMode(e.target.value as SortMode)}
-      className="bg-transparent text-xs text-zinc-400 outline-none cursor-pointer hover:text-zinc-700 transition-colors"
+      className="bg-transparent text-xs text-zinc-400 outline-none cursor-pointer hover:text-zinc-700 transition-colors -mr-1"
     >
       {SORT_OPTIONS.map(opt => (
         <option key={opt.value} value={opt.value} className="bg-white text-zinc-900">

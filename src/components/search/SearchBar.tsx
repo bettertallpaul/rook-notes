@@ -14,7 +14,7 @@ export function SearchBar() {
   useKeyboardShortcut('k', focusSearch, { meta: true })
 
   return (
-    <div className="px-4 py-3 bg-gray-50 shrink-0">
+    <div className="px-3 py-[15px] bg-gray-50 shrink-0">
       <div className="relative">
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none"

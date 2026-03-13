@@ -94,7 +94,7 @@ export function EditorToolbar({ editor }: Props) {
   ]
 
   return (
-    <div className="flex items-center gap-0.5 px-4 py-1.5 border-b border-gray-200 bg-gray-50 shrink-0 flex-wrap">
+    <div className="flex items-center gap-0.5 mx-4 px-2 py-1.5 rounded-lg bg-gray-100 shrink-0 flex-wrap mb-3">
       {items.map((item, i) => {
         if (item.type === 'separator') {
           return <div key={i} className="w-px h-4 bg-gray-200 mx-1" />

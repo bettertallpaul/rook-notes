@@ -18,42 +18,45 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
     <button
       onClick={onClick}
       className={clsx(
-        'relative w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors',
+        'relative group w-full text-left px-4 py-3 transition-colors',
         stale && 'opacity-50',
         selected && 'bg-red-50 ring-1 ring-inset ring-red-200'
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <span
-          className={clsx(
-            'font-medium text-sm truncate leading-snug',
-            stale ? 'text-zinc-400' : 'text-zinc-900'
-          )}
-        >
-          {title}
-        </span>
-        <span className="shrink-0 text-xs text-zinc-400 mt-0.5">
-          {formatTimestamp(note.updatedAt)}
-        </span>
-      </div>
-
-      {snippet && (
-        <p className="mt-0.5 text-xs text-zinc-400 line-clamp-2 leading-relaxed">{snippet}</p>
-      )}
-
-      {note.labels.length > 0 && (
-        <div className="mt-1.5 flex flex-wrap gap-1">
-          {note.labels.map(label => (
-            <span
-              key={label}
-              className="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded"
-            >
-              {label}
-            </span>
-          ))}
+      <div className="absolute inset-y-0 left-4 right-4 group-hover:bg-gray-50 transition-colors" />
+      <div className="relative px-2">
+        <div className="flex items-start justify-between gap-3">
+          <span
+            className={clsx(
+              'font-medium text-sm truncate leading-snug',
+              stale ? 'text-zinc-400' : 'text-zinc-900'
+            )}
+          >
+            {title}
+          </span>
+          <span className="shrink-0 text-xs text-zinc-400 mt-0.5">
+            {formatTimestamp(note.updatedAt)}
+          </span>
         </div>
-      )}
-      <div className="absolute bottom-0 left-4 right-0 border-b border-gray-200" />
+
+        {snippet && (
+          <p className="mt-0.5 text-xs text-zinc-400 line-clamp-2 leading-relaxed">{snippet}</p>
+        )}
+
+        {note.labels.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {note.labels.map(label => (
+              <span
+                key={label}
+                className="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="absolute bottom-0 left-4 right-4 border-b border-gray-200" />
     </button>
   )
 }

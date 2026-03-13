@@ -104,9 +104,9 @@ export function NoteEditor() {
   if (!note) return null
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
+    <div className="flex-1 flex flex-col min-h-0 bg-gray-50">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
+      <div className="flex items-center justify-between px-6 py-[23px] bg-gray-50 shrink-0">
         <button
           onClick={handleBack}
           className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
@@ -119,8 +119,11 @@ export function NoteEditor() {
 
       </div>
 
+      {/* White content area with rounded top */}
+      <div className="flex-1 min-h-0 flex flex-col rounded-t-lg bg-white overflow-hidden">
+
       {/* Title + Labels */}
-      <div className="shrink-0 px-6 pt-5 pb-3 border-b border-gray-200">
+      <div className="shrink-0 px-6 pt-5 pb-3">
         <input
           ref={titleRef}
           type="text"
@@ -178,6 +181,7 @@ export function NoteEditor() {
         ) : (
           <EditorContent editor={editor} className="h-full" />
         )}
+      </div>
       </div>
     </div>
   )
