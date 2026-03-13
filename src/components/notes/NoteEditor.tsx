@@ -117,27 +117,6 @@ export function NoteEditor() {
           Notes
         </button>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleToggleSource}
-            className={`text-xs px-2 py-1 rounded transition-colors cursor-pointer ${
-              sourceMode
-                ? 'bg-zinc-900 text-white'
-                : 'text-zinc-400 hover:text-zinc-700 hover:bg-gray-100'
-            }`}
-          >
-            {sourceMode ? 'Editor' : 'Source'}
-          </button>
-          <button
-            onClick={handleDelete}
-            title="Delete note"
-            className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        </div>
       </div>
 
       {/* Title + Labels */}
@@ -157,7 +136,30 @@ export function NoteEditor() {
           placeholder="Title"
           className="w-full text-xl font-semibold text-zinc-900 placeholder-zinc-300 bg-white outline-none mb-3"
         />
-        <LabelEditor noteId={note.id} labels={note.labels} />
+        <div className="flex items-center justify-between mt-2">
+          <LabelEditor noteId={note.id} labels={note.labels} />
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <button
+              onClick={handleToggleSource}
+              className={`text-xs px-2 py-1 rounded transition-colors cursor-pointer ${
+                sourceMode
+                  ? 'bg-zinc-900 text-white'
+                  : 'text-zinc-400 hover:text-zinc-700 hover:bg-gray-100'
+              }`}
+            >
+              {sourceMode ? 'Editor' : 'Source'}
+            </button>
+            <button
+              onClick={handleDelete}
+              title="Delete note"
+              className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Formatting toolbar (editor mode only) */}

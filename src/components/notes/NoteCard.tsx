@@ -18,7 +18,7 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
     <button
       onClick={onClick}
       className={clsx(
-        'w-full text-left px-4 py-3 border-b border-gray-200 hover:bg-gray-50 transition-colors',
+        'relative w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors',
         stale && 'opacity-50',
         selected && 'bg-red-50 ring-1 ring-inset ring-red-200'
       )}
@@ -53,6 +53,7 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
           ))}
         </div>
       )}
+      <div className="absolute bottom-0 left-4 right-0 border-b border-gray-200" />
     </button>
   )
 }

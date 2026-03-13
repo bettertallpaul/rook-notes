@@ -25,7 +25,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-56 h-full bg-gray-50 flex flex-col shrink-0 border-r border-gray-200">
+    <aside className="w-56 h-full bg-gray-50 flex flex-col shrink-0">
       {/* Logo */}
       <div className="px-4 pt-5 pb-3">
         <button
