@@ -47,7 +47,10 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-2 px-2">
-        <div className="mb-4">
+        <div className="mb-4 mx-2">
+          <p className="px-3 mb-1 text-xs font-medium text-zinc-400 uppercase tracking-wider">
+            Views
+          </p>
           {LIFECYCLE_OPTIONS.map(opt => (
             <button
               key={opt.value}
@@ -56,7 +59,7 @@ export function Sidebar() {
                 setActiveLabelFilter(null)
               }}
               className={clsx(
-                'w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors mb-0.5',
+                'w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors mb-0.5 pl-4',
                 lifecycleFilter === opt.value && !activeLabelFilter
                   ? 'bg-gray-200 text-zinc-900'
                   : 'text-zinc-500 hover:text-zinc-900 hover:bg-gray-100'
@@ -68,7 +71,7 @@ export function Sidebar() {
         </div>
 
         {labels.length > 0 && (
-          <div>
+          <div className="mx-2">
             <p className="px-3 mb-1 text-xs font-medium text-zinc-400 uppercase tracking-wider">
               Labels
             </p>
@@ -79,7 +82,7 @@ export function Sidebar() {
                   setActiveLabelFilter(activeLabelFilter === label ? null : label)
                 }
                 className={clsx(
-                  'w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors mb-0.5 truncate',
+                  'w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors mb-0.5 truncate pl-4',
                   activeLabelFilter === label
                     ? 'bg-red-50 text-red-600'
                     : 'text-zinc-500 hover:text-zinc-900 hover:bg-gray-100'
