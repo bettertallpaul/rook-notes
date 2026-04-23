@@ -1,6 +1,6 @@
 # Rook Notes
 
-> A fast, minimal, markdown-based note-taking app — built as a playground for MCP servers and AI-assisted development.
+> A fast, minimal, markdown-based note-taking app — built as a playground for AI-assisted development.
 
 ## What is Rook?
 
@@ -135,4 +135,4 @@ Then open http://localhost:5173 for the app, http://localhost:3001/docs for API 
 
 ## Task Tracking
 
-See [tasks.md](plans/tasks.md) for completed phases and current status.
+See [mcp-server-integration-tasks.md](plans/mcp-server-integration-tasks.md) for completed phases and current status.
