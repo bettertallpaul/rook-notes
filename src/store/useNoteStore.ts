@@ -131,12 +131,12 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
   addLabel: (id, label) => {
     set(s => {
       const note = s.notes[id]
-      if (!note || note.labels.includes(label)) return s
+      if (!note || note.labels.some(l => l.name === label)) return s
       return {
-        notes: { ...s.notes, [id]: { ...note, labels: [...note.labels, label] } },
+        notes: { ...s.notes, [id]: { ...note, labels: [...note.labels, { name: label, source: 'user' }] } },
       }
     })
-    api(`/notes/${id}/labels`, { method: 'POST', body: JSON.stringify({ label }) })
+    api(`/notes/${id}/labels`, { method: 'POST', body: JSON.stringify({ name: label, source: 'user' }) })
   },
 
   removeLabel: (id, label) => {
@@ -144,7 +144,7 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
       const note = s.notes[id]
       if (!note) return s
       return {
-        notes: { ...s.notes, [id]: { ...note, labels: note.labels.filter(l => l !== label) } },
+        notes: { ...s.notes, [id]: { ...note, labels: note.labels.filter(l => l.name !== label) } },
       }
     })
     api(`/notes/${id}/labels/${encodeURIComponent(label)}`, { method: 'DELETE' })

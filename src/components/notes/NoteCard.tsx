@@ -45,12 +45,12 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
 
         {note.labels.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1">
-            {note.labels.map(label => (
+            {note.labels.map(labelObj => (
               <span
-                key={label}
+                key={labelObj.name}
                 className="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded"
               >
-                {label}
+                {labelObj.name}
               </span>
             ))}
           </div>

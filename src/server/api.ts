@@ -5,6 +5,10 @@ import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-open
 import { z } from 'zod'
 import * as store from './store.js'
 import { NoteSchema, CreateNoteSchema, UpdateNoteSchema, AddLabelSchema } from '../shared/schemas.js'
+import { registerListeners } from './events/listeners.js'
+
+// Register async side-effects
+registerListeners()
 
 // --- OpenAPI spec ---
 
@@ -83,6 +87,10 @@ function broadcast() {
   }
 }
 
+store.storeEvents.on('note:created', broadcast)
+store.storeEvents.on('note:updated', broadcast)
+store.storeEvents.on('note:deleted', broadcast)
+
 // --- Express app ---
 
 const app = express()
@@ -91,6 +99,7 @@ app.use(express.json())
 
 // API docs
 app.get('/openapi.json', (_req, res) => res.json(openApiSpec))
+// @ts-expect-error - Scalar types are mismatched for spec.url
 app.use('/docs', apiReference({ spec: { url: '/openapi.json' } }))
 
 // SSE stream — clients subscribe to get notified of data changes
@@ -128,7 +137,6 @@ app.post('/api/notes', (req, res) => {
   const { title, content, labels } = result.data
   const note = store.createNote(title, content, labels)
   res.status(201).json(note)
-  broadcast()
 })
 
 // Update note
@@ -138,24 +146,21 @@ app.patch('/api/notes/:id', (req, res) => {
   const note = store.updateNote(req.params.id, result.data)
   if (!note) return res.status(404).json({ error: 'not found' })
   res.json(note)
-  broadcast()
 })
 
 // Delete note
 app.delete('/api/notes/:id', (req, res) => {
   if (!store.deleteNote(req.params.id)) return res.status(404).json({ error: 'not found' })
   res.json({ ok: true })
-  broadcast()
 })
 
 // Add label
 app.post('/api/notes/:id/labels', (req, res) => {
   const result = AddLabelSchema.safeParse(req.body ?? {})
   if (!result.success) return res.status(400).json({ error: result.error.flatten() })
-  const note = store.addLabel(req.params.id, result.data.label)
+  const note = store.addLabel(req.params.id, result.data.name, result.data.source)
   if (!note) return res.status(404).json({ error: 'not found' })
   res.json(note)
-  broadcast()
 })
 
 // Remove label
@@ -163,7 +168,6 @@ app.delete('/api/notes/:id/labels/:label', (req, res) => {
   const note = store.removeLabel(req.params.id, req.params.label)
   if (!note) return res.status(404).json({ error: 'not found' })
   res.json(note)
-  broadcast()
 })
 
 const PORT = parseInt(process.env.API_PORT ?? '3001', 10)

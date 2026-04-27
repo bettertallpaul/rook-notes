@@ -1,9 +1,10 @@
 import { useState, useRef, type KeyboardEvent } from 'react'
 import { useNoteStore } from '../../store/useNoteStore'
+import type { Label } from '../../types/note'
 
 interface LabelEditorProps {
   noteId: string
-  labels: string[]
+  labels: Label[]
 }
 
 export function LabelEditor({ noteId, labels }: LabelEditorProps) {
@@ -13,11 +14,11 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const allLabels = [...new Set(
-    Object.values(notes).flatMap(n => n.labels)
+    Object.values(notes).flatMap(n => n.labels.map(l => l.name))
   )].sort()
 
   const suggestions = input.trim()
-    ? allLabels.filter(l => l.toLowerCase().includes(input.toLowerCase()) && !labels.includes(l))
+    ? allLabels.filter(l => l.toLowerCase().includes(input.toLowerCase()) && !labels.some(lbl => lbl.name === l))
     : []
 
   const commitLabel = (value = input) => {
@@ -54,7 +55,7 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
         commitLabel()
       }
     } else if (e.key === 'Backspace' && !input && labels.length > 0) {
-      removeLabel(noteId, labels[labels.length - 1])
+      removeLabel(noteId, labels[labels.length - 1].name)
     }
   }
 
@@ -64,16 +65,16 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
         className="flex flex-wrap items-center gap-1.5 min-h-[24px] cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
-        {labels.map(label => (
+        {labels.map(labelObj => (
           <span
-            key={label}
+            key={labelObj.name}
             className="flex items-center gap-1 text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded"
           >
-            {label}
+            {labelObj.name}
             <button
               onClick={e => {
                 e.stopPropagation()
-                removeLabel(noteId, label)
+                removeLabel(noteId, labelObj.name)
               }}
               className="text-zinc-400 hover:text-zinc-600 transition-colors leading-none cursor-pointer"
             >
