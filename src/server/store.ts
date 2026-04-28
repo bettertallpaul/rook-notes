@@ -120,6 +120,36 @@ export function removeLabel(id: string, name: string): Note | undefined {
   return note
 }
 
+/**
+ * Merges AI-generated labels into a note.
+ * - Preserves all user labels.
+ * - Removes stale ai_auto / ai_suggested labels that are no longer in the new set.
+ * - Adds new ai_auto / ai_suggested labels.
+ * - Emits 'note:updated' WITHOUT re-triggering the taxonomy listener (handled in listeners.ts).
+ */
+export function setAiLabels(
+  id: string,
+  autoLabels: string[],
+  suggestedLabels: string[]
+): Note | undefined {
+  const notes = read()
+  const note = notes[id]
+  if (!note) return undefined
+
+  // Keep all user labels
+  const userLabels = note.labels.filter(l => l.source === 'user')
+
+  const newAiAuto: Label[] = autoLabels.map(name => ({ name, source: 'ai_auto' }))
+  const newAiSuggested: Label[] = suggestedLabels.map(name => ({ name, source: 'ai_suggested' }))
+
+  note.labels = [...userLabels, ...newAiAuto, ...newAiSuggested]
+  note.updatedAt = Date.now()
+  notes[id] = note
+  write(notes)
+  storeEvents.emit('note:ai_updated', note)
+  return note
+}
+
 export function searchNotes(query: string): Note[] {
   const q = query.toLowerCase()
   return listNotes().filter(n =>

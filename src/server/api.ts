@@ -90,6 +90,7 @@ function broadcast() {
 store.storeEvents.on('note:created', broadcast)
 store.storeEvents.on('note:updated', broadcast)
 store.storeEvents.on('note:deleted', broadcast)
+store.storeEvents.on('note:ai_updated', broadcast)
 
 // --- Express app ---
 

@@ -39,3 +39,16 @@ export type Label = z.infer<typeof LabelSchema>
 export type Note = z.infer<typeof NoteSchema>
 export type CreateNoteInput = z.infer<typeof CreateNoteSchema>
 export type UpdateNoteInput = z.infer<typeof UpdateNoteSchema>
+
+// Server-only configuration schema
+export const ServerConfigSchema = z.object({
+  TAXONOMY_MODEL: z.string().default('gemini-1.5-flash-8b'),
+  GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
+})
+
+export type ServerConfig = z.infer<typeof ServerConfigSchema>
+
+// Pragmatic config export: Validate once on boot, only in Node environments
+export const config = typeof process !== 'undefined' && process.env 
+  ? ServerConfigSchema.parse(process.env)
+  : {} as ServerConfig

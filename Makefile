@@ -22,7 +22,9 @@ down:
 	docker compose down
 
 purge:
-	docker compose down --volumes --rmi local
+	docker compose down --volumes --rmi local --remove-orphans
+	docker volume prune -f
+	rm -rf node_modules
 
 seed:
 	./scripts/seed.sh

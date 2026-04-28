@@ -19,6 +19,7 @@ This document bridges the AI Integrations PRD and the technical Implementation P
 ## Open Architecture Questions (For Future Milestones)
 
 ### 1. Data Model & Schema Extensions (`src/shared/schemas.ts`)
+- **Consolidating Zod Schemas:** Currently, schemas are split between `shared/schemas.ts` (Core/DTO) and local "locality-based" definitions (e.g., `TaxonomySchema` in `taxonomy.ts`). As more AI features (M2, M3) are added, should we consolidate all Zod validation into a domain-driven structure (e.g., `src/shared/schemas/ai.ts`) to ensure reusability between the application logic and evaluation suites?
 - **Storing Merge Proposals (M3):** The Deduplication Agent requires human-in-the-loop approval before merging notes. How is the LLM's proposed merge stored? Does `NoteSchema` gain a `status: "draft"` field and `mergedFromIds: string[]`, or do we create a separate `MergeProposalSchema` that does not touch `notes.json` until approved?
 
 ### 2. Background Job & State Architecture
