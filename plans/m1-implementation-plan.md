@@ -52,11 +52,30 @@ We will execute the plan in three distinct phases. Each phase ends with a **Revi
 ### Phase 3: Integration & Frontend UI
 *Focus: Wiring the AI service to the store events and building the React UI.*
 
-- [ ] 13. Wire the AI service to the store events in `src/server/events/listeners.ts` via the new in-memory Task Manager.
-- [ ] 14. Update the frontend UI to display AI-applied tags with a subtle visual cue (e.g., sparkle icon).
-- [ ] 15. Add the "Suggested New Tags" UI element and wire up the 1-click confirmation endpoint (`PATCH /api/notes/:id`).
-- [ ] 16. Verify E2E: Saving a note triggers the AI asynchronously, and the UI updates reactively via SSE.
+- [x] 13. Wire the AI service to the store events in `src/server/events/listeners.ts` via the new in-memory Task Manager.
+- [x] 14. Update the frontend UI to display AI-applied tags with a subtle visual cue (e.g., sparkle icon).
+- [x] 15. Add the "Suggested New Tags" UI element and wire up the 1-click confirmation endpoint (`PATCH /api/notes/:id`).
+- [x] 16. Verify E2E: Saving a note triggers the AI asynchronously, and the UI updates reactively via SSE.
+
+> **Post-M1 Refactor Pivot (Opt-In Intelligence)**
+> * **Issue:** The current implementation triggers the AI on every note save (debounced), causing 429 rate limits on batch operations and burning quota. The 3-layer tag display is also confusing to end-users.
+> * **Decision:** We are shifting from *Implicit Automation* to *Opt-In Intelligence*. We will halt background AI execution and introduce an explicit "Suggest Tags" user action, coupled with a simplified 3-state UI. See Phase 4.
+
 > **🛑 STOP & REVIEW 3:** Final review of the working feature in the browser.
+
+### Phase 4: UX Refactor (Opt-In Intelligence)
+*Focus: Removing implicit background processing, introducing explicit user triggers, and simplifying the Tag UI.*
+
+- [ ] 17. **Disable Background Triggers:** Remove or bypass the `EventEmitter` and debounce logic implemented in Phase 1 and 3 that triggers the LLM on every note save.
+- [ ] 18. **New API Endpoint:** Create a new endpoint (`POST /api/notes/:id/suggest-tags`) that runs the Vercel AI SDK logic and `classifyLabels` function, but *returns* the array to the client instead of writing directly to `notes.json`.
+- [ ] 19. **Frontend Trigger:** Add a "✨ Suggest Tags" button within the note editor UI that calls the new endpoint and stores the result in local component state.
+- [ ] 20. **Tag UI Overhaul:** Refactor the UI component to strictly support three states:
+    * `Applied` (Solid Red): Tags existing on the note (user-added or accepted).
+    * `Suggested (Existing)` (Solid Purple): AI suggestions that already exist in the master taxonomy.
+    * `Suggested (New)` (Dashed Purple outline + ✨ Sparkle): Novel AI suggestions that will add a new category to your taxonomy.
+- [ ] 21. **Acceptance Workflow:** Wire the click events on the Purple suggested tags to move them into the `Applied` (Red) state, triggering a standard `PATCH /api/notes/:id` to save the note.
+
+> **🛑 STOP & REVIEW 4:** Review the refactored Opt-In flow. Verify that bulk scripts (`make fresh`) no longer trigger AI evaluations and that the 3-state UI is intuitive.
 
 ---
 
@@ -68,9 +87,15 @@ We will execute the plan in three distinct phases. Each phase ends with a **Revi
 3. **Schema Tests:** Run existing unit tests (or add new ones) in `src/shared/schemas.ts` to verify the modified tag formats.
 
 ### Manual Verification
-1. **End-to-End Save:** Start the Docker stack (`make dev`), create a new note, and save.
-2. **Async UX:** Verify the note saves immediately, and the UI receives an SSE event a few seconds later updating the tags.
-3. **Visual Cues:** Verify AI-applied tags have the correct visual styling.
-4. **Suggested Tags:** Verify that a note about a completely novel concept surfaces a "Suggested Tag" instead of auto-applying it, and test the 1-click confirmation workflow.
-5. **Context Limits:** Paste a massive Lorem Ipsum document (>50k words) and verify the LLM call does not fail with token exhaustion.
-6. **Debounce Logic:** Rapidly save the same note 5 times and verify only 1 LLM call is made.
+
+**Original Verification (Phases 1-3) - DEPRECATED BY PHASE 4**
+1. ~**Async UX:** Save a note and verify the AI runs in the background, updating the tags via SSE without a page reload.~
+2. ~**Debounce Logic:** Rapidly save a note 5 times and verify the AI SDK is only triggered once after a 2-second pause.~
+
+**Refactored Manual Verification (Phase 4)**
+1. **Explicit Trigger:** Open a note, type content, and verify the AI does *not* run automatically.
+2. **Generation:** Click the "✨ Suggest Tags" button and verify the UI displays loading state, then surfaces purple tags.
+3. **Visual Cues:** Verify that a completely novel tag appears with a dashed purple outline and a sparkle icon, while an existing taxonomy tag appears as solid purple *without* a sparkle.
+4. **Acceptance:** Click a purple suggestion, verify it turns red, and confirm via page refresh that it has successfully persisted to the database.
+5. **Rejection:** Click the (x) on a purple suggestion and verify it is removed from the UI without affecting the saved note.
+6. **Context Limits:** Paste a massive Lorem Ipsum document (>50k words) and verify the LLM call does not fail with token exhaustion.

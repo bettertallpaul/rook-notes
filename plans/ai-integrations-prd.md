@@ -29,11 +29,13 @@ These are theoretical in the context of this sandbox project:
 
 _Focus: Mastering prompt engineering, API function calling, and structured JSON outputs._
 
--   **User Story:** As a user, when I save a new note or save an existing one, I want the system to automatically apply the most relevant existing tags, and suggest new ones only if absolutely necessary, so that my vault remains organized without manual effort.
+-   **User Story:** As a user, when I click 'Suggest Tags' on a note, I want the system to analyze my content and suggest both existing and new tags, so that I maintain full control over my vault's organization while still benefiting from AI assistance.
 -   **Acceptance Criteria:**
     
-    -   System accurately applies 1-3 relevant tags from the existing database list silently, accompanied by a subtle visual cue (e.g., a sparkle icon or distinct background color) so users notice the automated taxonomy changes.
-    -   **Taxonomy Bloat Prevention:** If the AI identifies the need for a _new_ tag, it does not apply it automatically. Instead, it surfaces it as a "Suggested New Tag" requiring a single-click user confirmation.
+    -   **Three-State Tag UI:** The system suggests tags without applying them silently. Suggestions are categorized into three distinct UI states:
+        1. **Applied Tags (Solid Red):** Tags already saved to the note by the user.
+        2. **Suggested Existing Tags (Solid Purple with Sparkle):** Tags that exist in the vault and are safe to add.
+        3. **Suggested New Tags (Dashed Purple with Sparkle):** Novel tags that warn of potential taxonomy bloat.
     -   API handles LLM timeouts gracefully (target P95 < 2.5s) without blocking the note-saving process.
 
 ### Milestone 2: "Chat with my Vault" (The "Vector & RAG" Phase)
@@ -76,9 +78,7 @@ To support the requirements above, the project will utilize the following techno
 
 -   **Milestone 1 (Auto-Taxonomy):**
     
-    -   **Flow:** Intercept the "Save Note" API call. Fetch the array of `active_tags` from the DB. Pass the note content and `active_tags` to the LLM orchestration layer.
-    -   **Async & SSE:** The API saves the note instantly and returns `200 OK`. It kicks off the LLM job asynchronously. Once the orchestration layer returns the structured JSON tags, the API updates the DB and fires a `data: changed` SSE event so the React UI reactively displays the new tags. 
-    -   **UX Edge Case:** If the user navigates away before the SSE event fires, the tags will quietly persist in the DB and be visible upon next load.
+    -   **Flow:** Intercept the explicit 'Suggest Tags' frontend button click. The API calls the LLM, returns a temporary array of categorized suggestions (`suggested_existing` and `suggested_new`), and the UI displays them. Nothing is written to the database until the user explicitly accepts a tag.
     -   **Constraint:** Force the LLM to return a strict JSON schema to prevent application crashes when parsing the response.
 -   **Milestone 2 (RAG & Retrieval):**
     
@@ -112,7 +112,7 @@ To demonstrate enterprise-grade product thinking (crucial for PM interviews), th
 
 -   **Context Window Protection (M1):** If a user pastes a massive 50,000-word document, the system must intelligently truncate or summarize the text before sending it to the LLM for taxonomy, preventing token exhaustion and controlling costs.
 -   **Tag Bloat Resiliency (M1):** The taxonomy prompt must gracefully handle vaults with hundreds of existing tags. If the tag list risks exhausting the context window, engineering must implement a pre-filtering semantic search to only pass the most relevant *candidate* tags to the LLM.
--   **Unit Economics:** Because M1 triggers an LLM generation on every save, engineering is constrained to use fast, inexpensive frontier models (e.g., Claude 3 Haiku or GPT-4o-mini) to ensure the feature's operational cost remains sustainable at scale.
+-   **Unit Economics:** Because M1 now relies on an explicit user opt-in rather than firing on every save, API quota burn is drastically reduced. We can comfortably use models like Gemini 1.5 Flash without aggressive rate-limiting.
 
 ## Appendix: Alternatives Considered
 
