@@ -1,0 +1,24 @@
+[
+  {
+    "vars": {
+      "note": "Just learned about Docker compose and how it mounts volumes. It's so much easier than running manual docker run commands with -v everywhere. Still need to figure out networking though."
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "try { const parsed = JSON.parse(output); return Array.isArray(parsed.labels) && parsed.labels.length > 0; } catch(e) { return false; }"
+      }
+    ]
+  },
+  {
+    "vars": {
+      "note": "Meeting notes from today: we are planning the Q3 roadmap. Key deliverables are the new UI redesign and the billing system refactor. Sarah will lead the UI, John will take billing."
+    },
+    "assert": [
+      {
+        "type": "javascript",
+        "value": "try { const parsed = JSON.parse(output); return Array.isArray(parsed.labels) && parsed.labels.length > 0; } catch(e) { return false; }"
+      }
+    ]
+  }
+]

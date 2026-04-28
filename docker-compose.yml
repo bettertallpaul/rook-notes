@@ -9,6 +9,8 @@ services:
       - notes_data:/app/data
     ports:
       - "5173:5173"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
 
@@ -23,6 +25,8 @@ services:
       - notes_data:/app/data
     ports:
       - "3001:3001"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
 
@@ -37,6 +41,8 @@ services:
       - notes_data:/app/data
     ports:
       - "3002:3002"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
       - API_BASE_URL=http://api:3001

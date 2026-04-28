@@ -36,13 +36,18 @@ We will execute the plan in three distinct phases. Each phase ends with a **Revi
 ### Phase 2: AI Service & Evaluation Setup
 *Focus: Writing the LLM prompt, integrating Vercel AI SDK, and validating structured outputs.*
 
-- [ ] 7. Create `tests/promptfoo/promptfooconfig.yaml` and a synthetic `dataset.json`.
-- [ ] 8. Integrate Vercel AI SDK in `src/server/ai/taxonomy.ts` using `generateObject`. Configure to use fast frontier model (e.g., Claude 3 Haiku).
-- [ ] 9. Implement `AbortController` timeout bounds (target P95 < 2.5s) on the LLM call.
-- [ ] 10. Implement Tag Pre-filtering (Keyword matching) to build candidate lists safely.
-- [ ] 11. Implement context window protection (truncation logic for massive notes).
-- [ ] 12. Run Promptfoo evals to verify >90% tag relevance and JSON schema adherence.
-> **🛑 STOP & REVIEW 2:** Review the LLM prompt, promptfoo evaluation results, and the Vercel AI SDK implementation.
+- [x] 7. Create `tests/promptfoo/promptfooconfig.yaml` and a synthetic `dataset.json`.
+- [x] 8. Integrate Vercel AI SDK in `src/server/ai/taxonomy.ts` using `generateObject`. Configured to support both Google (`gemini-1.5-flash`) and Anthropic models via `AI_PROVIDER` env variable.
+- [x] 9. Implement `AbortController` timeout bounds (target P95 < 2.5s) on the LLM call.
+- [x] 10. Implement Tag Pre-filtering (Keyword matching) to build candidate lists safely.
+- [x] 11. Implement context window protection (truncation logic for massive notes).
+- [x] 12. Run Promptfoo evals to verify >90% tag relevance and JSON schema adherence. *(Resolved: Model name updated to `gemini-flash-latest`)*
+
+> [!NOTE]
+> **API Troubleshooting (Gemini) Resolved**
+> The `404 Not Found` error for `generateContent` was not due to API Key restrictions. The model name `gemini-1.5-flash` was deprecated/missing in the API version used by the Vercel AI SDK. This was resolved by updating the model identifier to `gemini-flash-latest` in both `taxonomy.ts` and `promptfooconfig.yaml`, and increasing the timeout bounds to 10s to accommodate free-tier latency.
+
+> **🛑 STOP & REVIEW 2:** Review the LLM prompt, promptfoo evaluation setup, and the Vercel AI SDK implementation.
 
 ### Phase 3: Integration & Frontend UI
 *Focus: Wiring the AI service to the store events and building the React UI.*

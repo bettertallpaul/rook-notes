@@ -1,0 +1,8 @@
+description: "Taxonomy evaluation"
+prompts:
+  - "You are a helpful AI that categorizes notes. Given a note, output a list of suggested labels that categorize the note's topics. Labels should be short (1-2 words), lowercased, and highly relevant. You must return a valid JSON object containing a `labels` array with string values. DO NOT wrap the output in markdown blocks (no ```json). Return ONLY the raw JSON string. \n\nNote:\n{{note}}"
+
+providers:
+  - id: google:gemini-flash-latest
+
+tests: dataset.json
