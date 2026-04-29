@@ -8,22 +8,24 @@ const TaxonomySchema = z.object({
 });
 
 export async function suggestLabels(
-  noteContent: string, 
+  noteContent: string,
   noteTitle: string = '',
   existingTags: string[] = []
 ): Promise<string[]> {
+  if (!config.AI_ENABLED) return [];
+
   // Truncate massive notes to protect context window (~20k chars is plenty for taxonomy)
   const maxContentLength = 20000;
-  const contentToAnalyze = noteContent.length > maxContentLength 
-    ? noteContent.substring(0, maxContentLength) 
+  const contentToAnalyze = noteContent.length > maxContentLength
+    ? noteContent.substring(0, maxContentLength)
     : noteContent;
 
   // Tag Pre-filtering (Keyword matching)
   // Build a candidate list of existing tags that actually appear in the note content
   const contentLower = contentToAnalyze.toLowerCase();
   const candidateTags = existingTags.filter(tag => contentLower.includes(tag.toLowerCase()));
-  
-  const promptContext = candidateTags.length > 0 
+
+  const promptContext = candidateTags.length > 0
     ? `\n\nConsider using these existing tags if appropriate: ${candidateTags.join(', ')}`
     : '';
 
@@ -37,11 +39,12 @@ export async function suggestLabels(
       schema: TaxonomySchema,
       prompt: `Analyze the following note and suggest 1-5 highly relevant, short (1-2 words), lowercased labels that categorize its topics. Do not invent obscure labels; prefer common terms.${promptContext}\n\nTitle: ${noteTitle}\n\nContent: ${contentToAnalyze}`,
       abortSignal: controller.signal,
+      maxRetries: 0, // Fast-fail on 429s (quota exceeded) rather than hanging for 10s
     });
     return object.labels;
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      console.warn('[Taxonomy AI] Request timed out after 2.5s');
+      console.warn('[Taxonomy AI] Request timed out after 10s');
       return [];
     }
     console.error('[Taxonomy AI] Failed to generate labels:', error);

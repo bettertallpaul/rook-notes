@@ -4,8 +4,9 @@ import { apiReference } from '@scalar/express-api-reference'
 import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
 import { z } from 'zod'
 import * as store from './store.js'
-import { NoteSchema, CreateNoteSchema, UpdateNoteSchema, AddLabelSchema } from '../shared/schemas.js'
-import { registerListeners } from './events/listeners.js'
+import { NoteSchema, CreateNoteSchema, UpdateNoteSchema, AddLabelSchema, config } from '../shared/schemas.js'
+import { registerListeners, classifyLabels } from './events/listeners.js'
+import { suggestLabels } from './ai/taxonomy.js'
 
 // Register async side-effects
 registerListeners()
@@ -66,6 +67,24 @@ registry.registerPath({
     404: { description: 'Not found' },
   },
 })
+registry.registerPath({
+  method: 'post', path: '/api/notes/{id}/suggest-tags', summary: 'Suggest tags for a note',
+  request: { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { 
+      description: 'Suggested tags', 
+      content: { 
+        'application/json': { 
+          schema: z.object({
+            existing: z.array(z.string()),
+            new: z.array(z.string())
+          }) 
+        } 
+      } 
+    },
+    404: { description: 'Not found' },
+  },
+})
 
 const generator = new OpenApiGeneratorV3(registry.definitions)
 const openApiSpec = generator.generateDocument({
@@ -90,7 +109,6 @@ function broadcast() {
 store.storeEvents.on('note:created', broadcast)
 store.storeEvents.on('note:updated', broadcast)
 store.storeEvents.on('note:deleted', broadcast)
-store.storeEvents.on('note:ai_updated', broadcast)
 
 // --- Express app ---
 
@@ -169,6 +187,30 @@ app.delete('/api/notes/:id/labels/:label', (req, res) => {
   const note = store.removeLabel(req.params.id, req.params.label)
   if (!note) return res.status(404).json({ error: 'not found' })
   res.json(note)
+})
+
+// Suggest tags for a note
+app.post('/api/notes/:id/suggest-tags', async (req, res) => {
+  const note = store.getNote(req.params.id)
+  if (!note) return res.status(404).json({ error: 'not found' })
+
+  try {
+    const allNotes = store.listNotes()
+    const existingTaxonomy = Array.from(new Set(
+      allNotes.flatMap(n => n.labels.map(l => l.name))
+    ))
+
+    const suggestions = await suggestLabels(note.content, note.title, existingTaxonomy)
+    const { autoLabels, suggestedLabels } = classifyLabels(suggestions)
+
+    res.json({
+      existing: autoLabels,
+      new: suggestedLabels
+    })
+  } catch (error) {
+    console.error('[API] Suggest tags failed:', error)
+    res.status(500).json({ error: 'failed to generate suggestions', details: error instanceof Error ? error.message : String(error) })
+  }
 })
 
 const PORT = parseInt(process.env.API_PORT ?? '3001', 10)

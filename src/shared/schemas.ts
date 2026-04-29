@@ -5,7 +5,7 @@ extendZodWithOpenApi(z)
 
 export const LabelSchema = z.object({
   name: z.string().openapi({ example: 'work' }),
-  source: z.enum(['user', 'ai_auto', 'ai_suggested']).openapi({ example: 'user' }),
+  source: z.enum(['user']).openapi({ example: 'user' }),
 }).openapi('Label')
 
 export const NoteSchema = z.object({
@@ -32,7 +32,7 @@ export const UpdateNoteSchema = z.object({
 
 export const AddLabelSchema = z.object({
   name: z.string().openapi({ example: 'work' }),
-  source: z.enum(['user', 'ai_auto', 'ai_suggested']).default('user').openapi({ example: 'user' }),
+  source: z.enum(['user']).default('user').openapi({ example: 'user' }),
 }).openapi('AddLabel')
 
 export type Label = z.infer<typeof LabelSchema>
@@ -42,8 +42,11 @@ export type UpdateNoteInput = z.infer<typeof UpdateNoteSchema>
 
 // Server-only configuration schema
 export const ServerConfigSchema = z.object({
-  TAXONOMY_MODEL: z.string().default('gemini-1.5-flash-8b'),
+  TAXONOMY_MODEL: z.string().default('gemini-2.5-flash-lite'),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
+  AI_ENABLED: z.string()
+    .default('true')
+    .transform((v) => v.trim() === 'true'),
 })
 
 export type ServerConfig = z.infer<typeof ServerConfigSchema>

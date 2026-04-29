@@ -22,6 +22,7 @@ interface NoteStore {
   clearSelection: () => void
   addLabel: (id: string, label: string) => void
   removeLabel: (id: string, label: string) => void
+  suggestTags: (id: string) => Promise<{ existing: string[], new: string[] }>
   setSearchQuery: (q: string) => void
   setSortMode: (mode: SortMode) => void
   setLifecycleFilter: (f: LifecycleFilter) => void
@@ -148,6 +149,12 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
       }
     })
     api(`/notes/${id}/labels/${encodeURIComponent(label)}`, { method: 'DELETE' })
+  },
+
+  suggestTags: async (id: string) => {
+    const res = await api(`/notes/${id}/suggest-tags`, { method: 'POST' })
+    if (!res.ok) throw new Error('Failed to suggest tags')
+    return res.json()
   },
 
   setSearchQuery: (q) => set({ searchQuery: q }),

@@ -8,20 +8,6 @@ interface NoteCardProps {
   onClick: (e: React.MouseEvent) => void
 }
 
-function SparkleIcon() {
-  return (
-    <svg
-      width="8"
-      height="8"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-      className="shrink-0 text-violet-400"
-    >
-      <path d="M12 2l2.09 6.26L20 9.27l-5 4.87 1.18 6.88L12 17.77l-4.18 3.25L9 14.14 4 9.27l5.91-.91L12 2z" />
-    </svg>
-  )
-}
 
 export function NoteCard({ note, selected, onClick }: NoteCardProps) {
   const hasTitle = note.title !== undefined
@@ -29,9 +15,8 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
   const snippet = getSnippet(note.content, 140, !hasTitle)
   const stale = isStale(note)
 
-  // Show user + ai_auto labels on card; hide ai_suggested to keep card clean
-  const visibleLabels = note.labels.filter(l => l.source !== 'ai_suggested')
-  const hasSuggested = note.labels.some(l => l.source === 'ai_suggested')
+  // In Opt-In mode, only show user-applied (and accepted) labels on the card
+  const visibleLabels = note.labels.filter(l => l.source === 'user')
 
   return (
     <button
@@ -62,31 +47,16 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
           <p className="mt-0.5 text-xs text-zinc-400 line-clamp-2 leading-relaxed">{snippet}</p>
         )}
 
-        {(visibleLabels.length > 0 || hasSuggested) && (
+        {visibleLabels.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1 items-center">
             {visibleLabels.map(labelObj => (
               <span
                 key={labelObj.name}
-                className={clsx(
-                  'flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded',
-                  labelObj.source === 'ai_auto'
-                    ? 'bg-violet-50 text-violet-700'
-                    : 'bg-red-50 text-red-600'
-                )}
+                className="flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded bg-red-50 text-red-600"
               >
-                {labelObj.source === 'ai_auto' && <SparkleIcon />}
                 {labelObj.name}
               </span>
             ))}
-            {hasSuggested && (
-              <span
-                className="flex items-center gap-0.5 text-xs text-violet-400"
-                title="AI has suggestions — open note to review"
-              >
-                <SparkleIcon />
-                <span className="text-[10px]">suggestions</span>
-              </span>
-            )}
           </div>
         )}
       </div>

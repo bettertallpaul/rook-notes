@@ -23,6 +23,17 @@ function read(): Record<string, Note> {
       }
     }
     
+    // Phase 4 Migration: Remove non-user labels from persisted data
+    // In the Opt-In model, we no longer persist AI suggestions automatically.
+    for (const id in data) {
+      const note = data[id]
+      if (note.labels) {
+        const originalCount = note.labels.length
+        note.labels = note.labels.filter((l: any) => l.source === 'user')
+        if (note.labels.length !== originalCount) migrated = true
+      }
+    }
+    
     // Auto-save the migrated data so it persists
     if (migrated) {
       const dir = path.dirname(DATA_FILE)
@@ -94,7 +105,7 @@ export function deleteNote(id: string): boolean {
   return true
 }
 
-export function addLabel(id: string, name: string, source: "user" | "ai_auto" | "ai_suggested" = 'user'): Note | undefined {
+export function addLabel(id: string, name: string, source: "user" = 'user'): Note | undefined {
   const notes = read()
   const note = notes[id]
   if (!note) return undefined
@@ -120,35 +131,6 @@ export function removeLabel(id: string, name: string): Note | undefined {
   return note
 }
 
-/**
- * Merges AI-generated labels into a note.
- * - Preserves all user labels.
- * - Removes stale ai_auto / ai_suggested labels that are no longer in the new set.
- * - Adds new ai_auto / ai_suggested labels.
- * - Emits 'note:updated' WITHOUT re-triggering the taxonomy listener (handled in listeners.ts).
- */
-export function setAiLabels(
-  id: string,
-  autoLabels: string[],
-  suggestedLabels: string[]
-): Note | undefined {
-  const notes = read()
-  const note = notes[id]
-  if (!note) return undefined
-
-  // Keep all user labels
-  const userLabels = note.labels.filter(l => l.source === 'user')
-
-  const newAiAuto: Label[] = autoLabels.map(name => ({ name, source: 'ai_auto' }))
-  const newAiSuggested: Label[] = suggestedLabels.map(name => ({ name, source: 'ai_suggested' }))
-
-  note.labels = [...userLabels, ...newAiAuto, ...newAiSuggested]
-  note.updatedAt = Date.now()
-  notes[id] = note
-  write(notes)
-  storeEvents.emit('note:ai_updated', note)
-  return note
-}
 
 export function searchNotes(query: string): Note[] {
   const q = query.toLowerCase()

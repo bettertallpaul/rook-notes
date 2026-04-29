@@ -28,18 +28,19 @@ function CheckIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polyline points="20 6 9 17 4 12" />
-    </svg>
-  )
+    </svg>  )
 }
 
 export function LabelEditor({ noteId, labels }: LabelEditorProps) {
-  const { addLabel, removeLabel, notes } = useNoteStore()
+  const { addLabel, removeLabel, notes, suggestTags } = useNoteStore()
   const [input, setInput] = useState('')
   const [highlightedIndex, setHighlightedIndex] = useState(0)
+  const [isSuggesting, setIsSuggesting] = useState(false)
+  const [aiSuggestions, setAiSuggestions] = useState<{ existing: string[], new: string[] } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const userAndAutoLabels = labels.filter(l => l.source !== 'ai_suggested')
-  const suggestedLabels = labels.filter(l => l.source === 'ai_suggested')
+  // In Opt-In mode, only labels with source 'user' are considered "Applied"
+  const appliedLabels = labels.filter(l => l.source === 'user')
 
   const allLabels = [...new Set(
     Object.values(notes).flatMap(n => n.labels.map(l => l.name))
@@ -58,10 +59,40 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
     }
   }
 
-  const confirmSuggested = (name: string) => {
-    // Promote ai_suggested → user by removing & re-adding as user
-    removeLabel(noteId, name)
+  const handleSuggestTags = async () => {
+    setIsSuggesting(true)
+    try {
+      const results = await suggestTags(noteId)
+      // Filter out labels already applied to this note
+      const filteredResults = {
+        existing: results.existing.filter(name => !appliedLabels.some(l => l.name === name)),
+        new: results.new.filter(name => !appliedLabels.some(l => l.name === name))
+      }
+      setAiSuggestions(filteredResults)
+    } catch (err) {
+      console.error('[LabelEditor] Suggest tags failed:', err)
+    } finally {
+      setIsSuggesting(false)
+    }
+  }
+
+  const acceptSuggestion = (name: string) => {
     addLabel(noteId, name)
+    if (aiSuggestions) {
+      setAiSuggestions({
+        existing: aiSuggestions.existing.filter(s => s !== name),
+        new: aiSuggestions.new.filter(s => s !== name)
+      })
+    }
+  }
+
+  const dismissSuggestion = (name: string) => {
+    if (aiSuggestions) {
+      setAiSuggestions({
+        existing: aiSuggestions.existing.filter(s => s !== name),
+        new: aiSuggestions.new.filter(s => s !== name)
+      })
+    }
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -88,38 +119,32 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
       } else {
         commitLabel()
       }
-    } else if (e.key === 'Backspace' && !input && userAndAutoLabels.length > 0) {
-      const last = userAndAutoLabels[userAndAutoLabels.length - 1]
-      if (last.source === 'user') removeLabel(noteId, last.name)
+    } else if (e.key === 'Backspace' && !input && appliedLabels.length > 0) {
+      const last = appliedLabels[appliedLabels.length - 1]
+      removeLabel(noteId, last.name)
     }
   }
 
   return (
-    <div className="flex-1">
-      {/* Applied labels row */}
+    <div className="flex flex-col gap-3 flex-1">
+      {/* Applied labels row & Input */}
       <div className="relative">
         <div
           className="flex flex-wrap items-center gap-1.5 min-h-[24px] cursor-text"
           onClick={() => inputRef.current?.focus()}
         >
-          {userAndAutoLabels.map(labelObj => (
+          {appliedLabels.map(labelObj => (
             <span
               key={labelObj.name}
-              title={labelObj.source === 'ai_auto' ? 'Applied by AI' : undefined}
-              className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded transition-colors ${
-                labelObj.source === 'ai_auto'
-                  ? 'bg-violet-50 text-violet-700 ring-1 ring-inset ring-violet-200'
-                  : 'bg-red-50 text-red-600'
-              }`}
+              className="group flex items-center gap-1 text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded transition-colors"
             >
-              {labelObj.source === 'ai_auto' && <SparkleIcon />}
               {labelObj.name}
               <button
                 onClick={e => {
                   e.stopPropagation()
                   removeLabel(noteId, labelObj.name)
                 }}
-                className="text-zinc-400 hover:text-zinc-600 transition-colors leading-none cursor-pointer"
+                className="text-red-300 hover:text-red-600 transition-colors leading-none cursor-pointer"
                 aria-label={`Remove label ${labelObj.name}`}
               >
                 ×
@@ -133,7 +158,7 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
             onChange={e => { setInput(e.target.value); setHighlightedIndex(0) }}
             onKeyDown={handleKeyDown}
             onBlur={() => { commitLabel() }}
-            placeholder={labels.length === 0 ? 'Add labels…' : ''}
+            placeholder={appliedLabels.length === 0 ? 'Add labels…' : ''}
             className="flex-1 min-w-[120px] bg-transparent text-xs text-zinc-500 placeholder-zinc-400 outline-none"
           />
         </div>
@@ -156,39 +181,52 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
         )}
       </div>
 
-      {/* AI Suggested labels — 1-click confirmation */}
-      {suggestedLabels.length > 0 && (
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-zinc-400 flex items-center gap-1">
-            <SparkleIcon />
-            Suggested:
-          </span>
-          {suggestedLabels.map(labelObj => (
-            <span
-              key={labelObj.name}
-              className="flex items-center gap-1 text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded ring-1 ring-inset ring-violet-200 ring-dashed"
-            >
-              {labelObj.name}
-              <button
-                onClick={() => confirmSuggested(labelObj.name)}
-                title="Confirm this label"
-                className="text-violet-500 hover:text-violet-700 transition-colors cursor-pointer"
-                aria-label={`Confirm label ${labelObj.name}`}
+      {/* Suggestion Controls & Transient AI labels */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={handleSuggestTags}
+          disabled={isSuggesting}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all disabled:opacity-50 text-zinc-600 shadow-sm bg-white"
+        >
+          <SparkleIcon />
+          {isSuggesting ? 'Suggesting...' : 'Suggest Tags'}
+        </button>
+
+        {aiSuggestions && (aiSuggestions.existing.length > 0 || aiSuggestions.new.length > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {aiSuggestions.existing.map(name => (
+              <span
+                key={name}
+                onClick={() => acceptSuggestion(name)}
+                className="flex items-center gap-1 text-xs bg-violet-100 text-violet-700 px-2.5 py-1 rounded cursor-pointer hover:bg-violet-200 transition-colors font-medium"
               >
-                <CheckIcon />
-              </button>
-              <button
-                onClick={() => removeLabel(noteId, labelObj.name)}
-                title="Dismiss"
-                className="text-zinc-400 hover:text-zinc-600 transition-colors leading-none cursor-pointer"
-                aria-label={`Dismiss suggestion ${labelObj.name}`}
+                + {name}
+                <button
+                  onClick={(e) => { e.stopPropagation(); dismissSuggestion(name) }}
+                  className="ml-0.5 text-violet-400 hover:text-violet-600 text-sm leading-none"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            {aiSuggestions.new.map(name => (
+              <span
+                key={name}
+                onClick={() => acceptSuggestion(name)}
+                className="flex items-center gap-1 text-xs border border-dashed border-violet-300 bg-violet-50/30 text-violet-600 px-2.5 py-1 rounded cursor-pointer hover:bg-violet-50 transition-colors font-medium"
               >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
+                + {name} <SparkleIcon />
+                <button
+                  onClick={(e) => { e.stopPropagation(); dismissSuggestion(name) }}
+                  className="ml-0.5 text-violet-400 hover:text-violet-600 text-sm leading-none"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

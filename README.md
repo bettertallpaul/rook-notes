@@ -1,6 +1,6 @@
 # Rook Notes
 
-> A fast, minimal, markdown-based note-taking app — built as a playground for AI-assisted development.
+> A fast, minimal, markdown-based note-taking app — built as a playground for AI-assisted development, exploring APIs, MCP server, AI integration and evals.
 
 ## What is Rook?
 
@@ -13,9 +13,11 @@ A fast, minimal, markdown-based note-taking app. See [rook-prd.md](rook-prd.md) 
 | Frontend | React 18, Zustand, TipTap (markdown editor), Tailwind CSS 4, Vite |
 | Backend API | Express 5, Zod validation, OpenAPI via `zod-to-openapi`, Scalar docs UI |
 | MCP Server | `@modelcontextprotocol/sdk`, Streamable HTTP transport, stateless |
+| AI | Vercel AI SDK, Google Gemini |
+| Evaluation | Promptfoo (LLM evals) |
 | Data | JSON file store on disk (`data/notes.json`), Docker named volume |
 | Schemas | Zod (single source of truth in `src/shared/schemas.ts`) |
-| Runtime | Docker Compose (3 services), Node 22 |
+| Runtime | Docker Compose (3 services), Node 24 (Bookworm) |
 
 ## Architecture
 
@@ -26,11 +28,13 @@ A fast, minimal, markdown-based note-taking app. See [rook-prd.md](rook-prd.md) 
 │  React App  │◄───────────────►│ Express API │────┘
 │   :5173     │                 │   :3001     │
 └─────────────┘                 └──────▲──────┘
-                                       │ HTTP
-                                ┌──────┴──────┐
-                                │ MCP Server  │
-                                │  :3002/mcp  │
-                                └─────────────┘
+                                       │
+                    ┌──────────────────┴──────────────────┐
+                    │ HTTP                                │ HTTP
+             ┌──────▼──────┐                       ┌──────▼──────┐
+             │ MCP Server  │                       │ AI Service  │
+             │  :3002/mcp  │                       │  (Gemini)   │
+             └─────────────┘                       └─────────────┘
 ```
 
 - **MCP is a consumer of the HTTP API** — it does not import `store.ts` directly. This means extending the data model only requires changes in `schemas.ts` + `store.ts`.
@@ -46,6 +50,9 @@ A fast, minimal, markdown-based note-taking app. See [rook-prd.md](rook-prd.md) 
 | `src/server/store.ts` | JSON-file CRUD store for notes |
 | `src/server/api.ts` | Express API: REST routes, OpenAPI spec, SSE broadcast, Scalar docs at `/docs` |
 | `src/server/mcp.ts` | MCP server: 4 intent-based tools (`search_notes`, `create_note`, `edit_note`, `delete_note`) |
+| `src/server/ai/taxonomy.ts` | AI taxonomy service (Vercel AI SDK) |
+| `src/server/events/listeners.ts` | Event listeners for side-effects |
+| `tests/promptfoo/` | LLM evaluation suite (benchmarks & prompts) |
 | `src/store/useNoteStore.ts` | Zustand store: client-side state, optimistic updates, API calls |
 | `src/App.tsx` | Root component: SSE subscription, initial fetch |
 | `src/components/layout/Sidebar.tsx` | Label filters, lifecycle filters, sort controls |
@@ -87,7 +94,7 @@ Shared volumes: `node_modules` (named), `notes_data` (named, mounted at `/app/da
 |------|-------------|
 | `search_notes` | Search by keyword or list all notes |
 | `create_note` | Create note with title, content, and labels in one shot |
-| `edit_note` | Update title/content and reconcile labels to a desired final set |
+| `edit_note` | Update title/content and reconcile labels to a desired final set (supports object-based schema) |
 | `delete_note` | Delete a note by ID |
 
 MCP config for Claude Code (`~/.claude/settings.json` or `.claude/settings.local.json`):
@@ -113,6 +120,7 @@ MCP config for Claude Code (`~/.claude/settings.json` or `.claude/settings.local
 | `DELETE` | `/api/notes/:id` | Delete note |
 | `POST` | `/api/notes/:id/labels` | Add label |
 | `DELETE` | `/api/notes/:id/labels/:label` | Remove label |
+| `POST` | `/api/notes/:id/suggest-tags` | Get AI-suggested tags for a note |
 | `GET` | `/api/events` | SSE stream (real-time updates) |
 | `GET` | `/openapi.json` | OpenAPI spec |
 | `GET` | `/docs` | Scalar API docs UI |
@@ -124,6 +132,7 @@ MCP config for Claude Code (`~/.claude/settings.json` or `.claude/settings.local
 - **Single source of truth** — Zod schemas in `src/shared/schemas.ts`. To add a field to the Note model: update `schemas.ts`, then `store.ts`. API and MCP pick it up automatically.
 - **Stateless MCP** — each request creates a fresh `McpServer` instance. No session management needed.
 - **`tsx watch`** — API and MCP servers auto-reload on file changes. Occasionally may need `docker compose restart api` or `docker compose restart mcp` if changes aren't picked up.
+- **Opt-In Intelligence** — AI features are explicitly triggered by the user to preserve agency and manage API quotas.
 
 ## Getting Started
 

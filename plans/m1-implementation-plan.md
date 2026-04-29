@@ -5,8 +5,8 @@ This document outlines the implementation plan for Milestone 1 (Auto-Taxonomy), 
 ## Resolved Architectural Decisions
 
 > [!NOTE]
-> **1. Data Model Extension (Schema): Option B (Object Array)**
-> Modified `NoteSchema` to `labels: { name: string, source: "user" | "ai_auto" | "ai_suggested" }[]`. This maps correctly to the UI states (subtle cues, 1-click confirmation) and keeps `schemas.ts` as the single source of truth.
+> **1. Data Model Extension (Schema): Option B (Object Array) → Opt-In Pivot**
+> Modified `NoteSchema` to `labels: { name: string, source: "user" }[]`. While the schema supports metadata, we have pivoted to an "Opt-In" model where AI suggestions are transient and only persist once accepted by the user as source: "user".
 
 > [!NOTE]
 > **2. Async Job Durability: Option A (In-Memory Task Manager)**
@@ -66,14 +66,14 @@ We will execute the plan in three distinct phases. Each phase ends with a **Revi
 ### Phase 4: UX Refactor (Opt-In Intelligence)
 *Focus: Removing implicit background processing, introducing explicit user triggers, and simplifying the Tag UI.*
 
-- [ ] 17. **Disable Background Triggers:** Remove or bypass the `EventEmitter` and debounce logic implemented in Phase 1 and 3 that triggers the LLM on every note save.
-- [ ] 18. **New API Endpoint:** Create a new endpoint (`POST /api/notes/:id/suggest-tags`) that runs the Vercel AI SDK logic and `classifyLabels` function, but *returns* the array to the client instead of writing directly to `notes.json`.
-- [ ] 19. **Frontend Trigger:** Add a "✨ Suggest Tags" button within the note editor UI that calls the new endpoint and stores the result in local component state.
-- [ ] 20. **Tag UI Overhaul:** Refactor the UI component to strictly support three states:
+- [x] 17. **Disable Background Triggers:** Remove or bypass the `EventEmitter` and debounce logic implemented in Phase 1 and 3 that triggers the LLM on every note save.
+- [x] 18. **New API Endpoint:** Create a new endpoint (`POST /api/notes/:id/suggest-tags`) that runs the Vercel AI SDK logic and `classifyLabels` function, but *returns* the array to the client instead of writing directly to `notes.json`.
+- [x] 19. **Frontend Trigger:** Add a "✨ Suggest Tags" button within the note editor UI that calls the new endpoint and stores the result in local component state.
+- [x] 20. **Tag UI Overhaul:** Refactor the UI component to strictly support three states:
     * `Applied` (Solid Red): Tags existing on the note (user-added or accepted).
     * `Suggested (Existing)` (Solid Purple): AI suggestions that already exist in the master taxonomy.
     * `Suggested (New)` (Dashed Purple outline + ✨ Sparkle): Novel AI suggestions that will add a new category to your taxonomy.
-- [ ] 21. **Acceptance Workflow:** Wire the click events on the Purple suggested tags to move them into the `Applied` (Red) state, triggering a standard `PATCH /api/notes/:id` to save the note.
+- [x] 21. **Acceptance Workflow:** Wire the click events on the Purple suggested tags to move them into the `Applied` (Red) state, triggering a standard `PATCH /api/notes/:id` to save the note.
 
 > **🛑 STOP & REVIEW 4:** Review the refactored Opt-In flow. Verify that bulk scripts (`make fresh`) no longer trigger AI evaluations and that the 3-state UI is intuitive.
 

@@ -6,13 +6,19 @@ This document bridges the AI Integrations PRD and the technical Implementation P
 
 ---
 
+### TODOS
+1. Polish UI for AI suggested tags. Doesn't match the mock.
+2. Flesh out evals: currently only two test cases? Need to add `test-ai` or similar in makefile. Also check if current `make test` is up to date. Should it be split in core app vs AI features?
+
+---
+
 ## Resolved Architectural Decisions
 
 ### Milestone 1: Auto-Taxonomy (Completed Phases 1 & 2)
 - **Data Model Extension (Schema):** Changed the `labels` array from `string[]` to an array of objects `[{ name: string, source: "user" | "ai_auto" | "ai_suggested" }]` to drive UI logic without parallel arrays.
 - **Async Job Durability:** Decided to rely on a lightweight Node.js Task Manager for floating promises within the Express API for M1, accepting that jobs may be lost on container restart. A robust queue (SQLite outbox) is deferred to M3.
 - **Context Window Protection:** Implemented hard truncation at ~20,000 characters for the LLM prompt to prevent context exhaustion on massive notes.
-- **Tag Bloat Resiliency:** To prevent bloating context with hundreds of existing tags, implemented a fast Tag Pre-filtering mechanism using basic keyword/substring matching against the note content to build a candidate list safely.
+- **Tag Bloat Resiliency:** To prevent bloating context with hundreds of existing tags, implemented a fast Tag Pre-filtering mechanism using basic keyword/substring matching. (Note: Currently conservative; e.g., "test" in content won't nudge a "testing" tag).
 
 ---
 
@@ -28,3 +34,7 @@ This document bridges the AI Integrations PRD and the technical Implementation P
 
 ### 3. Scale, API & Data Flow Strategy
 - **Streaming RAG Responses (M2):** The UI needs to stream the AI's response for the chat feature. Do we broadcast the streaming text chunks over the existing `/api/events` SSE connection, or do we create a dedicated streaming HTTP endpoint specifically leveraging Vercel AI SDK?
+- **Semantic Taxonomy (M2):** Once the vector store is live, we plan to replace the current keyword-based tag pre-filtering with a semantic similarity search. This will allow the AI to be nudged with relevant existing tags even if they don't appear as literal substrings (e.g., "test" in content nudging a "testing" tag).
+### 4. Model Selection & Stability
+- **Switch to 2.5-flash-lite:** Default model updated to `gemini-2.5-flash-lite` in `schemas.ts` as 1.5 models are deprecated/unavailable for the primary dev account.
+- **Research Needed (2.0 Lite):** Research why the `2.0 lite` model failed during initial testing. Investigate if it offers better rate limits or latency than 2.5-flash-lite once connectivity issues are resolved.
