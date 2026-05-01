@@ -6,12 +6,6 @@ This document bridges the AI Integrations PRD and the technical Implementation P
 
 ---
 
-### TODOS
-1. Polish UI for AI suggested tags. Doesn't match the mock.
-2. Flesh out evals: currently only two test cases? Need to add `test-ai` or similar in makefile. Also check if current `make test` is up to date. Should it be split in core app vs AI features?
-
----
-
 ## Resolved Architectural Decisions
 
 ### Milestone 1: Auto-Taxonomy (Completed Phases 1 & 2)

@@ -10,7 +10,7 @@ A fast, minimal, markdown-based note-taking app. See [rook-prd.md](rook-prd.md) 
 
 | Layer | Tech |
 |-------|------|
-| Frontend | React 18, Zustand, TipTap (markdown editor), Tailwind CSS 4, Vite |
+| Frontend | React 18, Zustand, TipTap (markdown editor), Tailwind CSS 4, Vite, Sonner |
 | Backend API | Express 5, Zod validation, OpenAPI via `zod-to-openapi`, Scalar docs UI |
 | MCP Server | `@modelcontextprotocol/sdk`, Streamable HTTP transport, stateless |
 | AI | Vercel AI SDK, Google Gemini |
@@ -133,6 +133,7 @@ MCP config for Claude Code (`~/.claude/settings.json` or `.claude/settings.local
 - **Stateless MCP** — each request creates a fresh `McpServer` instance. No session management needed.
 - **`tsx watch`** — API and MCP servers auto-reload on file changes. Occasionally may need `docker compose restart api` or `docker compose restart mcp` if changes aren't picked up.
 - **Opt-In Intelligence** — AI features are explicitly triggered by the user to preserve agency and manage API quotas.
+- **Bubbled Error Handling** — Backend and AI errors are bubbled up as raw messages to the UI. This ensures actionable feedback (e.g., API timeouts, quota limits) via global toast notifications instead of generic "Failed" messages.
 
 ## Getting Started
 

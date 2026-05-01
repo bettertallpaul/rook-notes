@@ -45,10 +45,10 @@ export async function suggestLabels(
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       console.warn('[Taxonomy AI] Request timed out after 10s');
-      return [];
+      throw new Error('AI tag suggestion timed out (AbortError)');
     }
     console.error('[Taxonomy AI] Failed to generate labels:', error);
-    return [];
+    throw error;
   } finally {
     clearTimeout(timeoutId);
   }

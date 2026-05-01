@@ -1,4 +1,5 @@
 import { useState, useRef, type KeyboardEvent } from 'react'
+import { toast } from 'sonner'
 import { useNoteStore } from '../../store/useNoteStore'
 import type { Label } from '../../types/note'
 
@@ -28,7 +29,7 @@ function CheckIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polyline points="20 6 9 17 4 12" />
-    </svg>  )
+    </svg>)
 }
 
 export function LabelEditor({ noteId, labels }: LabelEditorProps) {
@@ -68,8 +69,12 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
         existing: results.existing.filter(name => !appliedLabels.some(l => l.name === name)),
         new: results.new.filter(name => !appliedLabels.some(l => l.name === name))
       }
+      if (filteredResults.existing.length === 0 && filteredResults.new.length === 0) {
+        toast.info('No new tags suggested.')
+      }
       setAiSuggestions(filteredResults)
     } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err))
       console.error('[LabelEditor] Suggest tags failed:', err)
     } finally {
       setIsSuggesting(false)
@@ -170,9 +175,8 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
                 key={s}
                 onMouseDown={e => { e.preventDefault(); commitLabel(s) }}
                 onMouseEnter={() => setHighlightedIndex(i)}
-                className={`px-3 py-1.5 text-xs cursor-pointer ${
-                  i === highlightedIndex ? 'bg-gray-100 text-zinc-900' : 'text-zinc-600'
-                }`}
+                className={`px-3 py-1.5 text-xs cursor-pointer ${i === highlightedIndex ? 'bg-gray-100 text-zinc-900' : 'text-zinc-600'
+                  }`}
               >
                 {s}
               </li>

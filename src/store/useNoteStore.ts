@@ -153,7 +153,10 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
 
   suggestTags: async (id: string) => {
     const res = await api(`/notes/${id}/suggest-tags`, { method: 'POST' })
-    if (!res.ok) throw new Error('Failed to suggest tags')
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.details || data.error || 'Failed to suggest tags');
+    }
     return res.json()
   },
 
