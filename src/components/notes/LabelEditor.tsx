@@ -8,21 +8,6 @@ interface LabelEditorProps {
   labels: Label[]
 }
 
-/** Sparkle icon — marks AI-auto-applied labels */
-function SparkleIcon() {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-      className="shrink-0 text-violet-400"
-    >
-      <path d="M12 2l2.09 6.26L20 9.27l-5 4.87 1.18 6.88L12 17.77l-4.18 3.25L9 14.14 4 9.27l5.91-.91L12 2z" />
-    </svg>
-  )
-}
 
 /** Check icon — for confirm button */
 function CheckIcon() {
@@ -131,17 +116,17 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 flex-1">
-      {/* Applied labels row & Input */}
+    <div className="flex flex-col gap-2 flex-1">
       <div className="relative">
         <div
-          className="flex flex-wrap items-center gap-1.5 min-h-[24px] cursor-text"
+          className="flex flex-wrap items-center gap-2 min-h-[32px] cursor-text"
           onClick={() => inputRef.current?.focus()}
         >
+          {/* Applied tags */}
           {appliedLabels.map(labelObj => (
             <span
               key={labelObj.name}
-              className="group flex items-center gap-1 text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded transition-colors"
+              className="group flex items-center gap-1.5 text-xs bg-red-50 text-red-600 px-2 py-1 rounded-md transition-colors"
             >
               {labelObj.name}
               <button
@@ -150,26 +135,65 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
                   removeLabel(noteId, labelObj.name)
                 }}
                 className="text-red-300 hover:text-red-600 transition-colors leading-none cursor-pointer"
-                aria-label={`Remove label ${labelObj.name}`}
+                aria-label={`Remove tag ${labelObj.name}`}
               >
                 ×
               </button>
             </span>
           ))}
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={e => { setInput(e.target.value); setHighlightedIndex(0) }}
-            onKeyDown={handleKeyDown}
-            onBlur={() => { commitLabel() }}
-            placeholder={appliedLabels.length === 0 ? 'Add labels…' : ''}
-            className="flex-1 min-w-[120px] bg-transparent text-xs text-zinc-500 placeholder-zinc-400 outline-none"
-          />
+
+          {/* Input field - naturally follows user tags */}
+          <div className="flex-1 min-w-[100px] flex items-center">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={e => { setInput(e.target.value); setHighlightedIndex(0) }}
+              onKeyDown={handleKeyDown}
+              onBlur={() => { commitLabel() }}
+              placeholder="Add tags…"
+              className="w-full bg-transparent text-sm text-zinc-500 placeholder-zinc-400 outline-none"
+            />
+          </div>
+
+          {/* AI Suggestions - now inline */}
+          {aiSuggestions && (
+            <>
+              {aiSuggestions.existing.map(name => (
+                <span
+                  key={name}
+                  onClick={() => acceptSuggestion(name)}
+                  className="flex items-center gap-1 text-xs bg-violet-100 text-violet-700 px-2.5 py-1 rounded-md cursor-pointer hover:bg-violet-200 transition-colors font-medium"
+                >
+                  + {name}
+                </span>
+              ))}
+              {aiSuggestions.new.map(name => (
+                <span
+                  key={name}
+                  onClick={() => acceptSuggestion(name)}
+                  className="flex items-center gap-1 text-xs border border-dashed border-violet-300 bg-violet-50/30 text-violet-600 px-2.5 py-1 rounded-md cursor-pointer hover:bg-violet-50 transition-colors font-medium"
+                >
+                  + {name} ✨
+                </span>
+              ))}
+            </>
+          )}
+
+          {/* Suggest Tags Button - flows inline */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleSuggestTags() }}
+            disabled={isSuggesting}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 cursor-pointer border border-transparent"
+          >
+            <span className="text-violet-500">✨</span>
+            {isSuggesting ? 'Suggesting...' : 'Suggest Tags'}
+          </button>
         </div>
 
+        {/* Autocomplete dropdown */}
         {suggestions.length > 0 && (
-          <ul className="absolute top-full left-0 mt-1 z-10 bg-white border border-gray-200 rounded shadow-sm min-w-[160px] py-0.5">
+          <ul className="absolute top-full left-0 mt-1 z-10 bg-white border border-gray-200 rounded-md shadow-sm min-w-[160px] py-0.5">
             {suggestions.map((s, i) => (
               <li
                 key={s}
@@ -182,53 +206,6 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
               </li>
             ))}
           </ul>
-        )}
-      </div>
-
-      {/* Suggestion Controls & Transient AI labels */}
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={handleSuggestTags}
-          disabled={isSuggesting}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all disabled:opacity-50 text-zinc-600 shadow-sm bg-white"
-        >
-          <SparkleIcon />
-          {isSuggesting ? 'Suggesting...' : 'Suggest Tags'}
-        </button>
-
-        {aiSuggestions && (aiSuggestions.existing.length > 0 || aiSuggestions.new.length > 0) && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            {aiSuggestions.existing.map(name => (
-              <span
-                key={name}
-                onClick={() => acceptSuggestion(name)}
-                className="flex items-center gap-1 text-xs bg-violet-100 text-violet-700 px-2.5 py-1 rounded cursor-pointer hover:bg-violet-200 transition-colors font-medium"
-              >
-                + {name}
-                <button
-                  onClick={(e) => { e.stopPropagation(); dismissSuggestion(name) }}
-                  className="ml-0.5 text-violet-400 hover:text-violet-600 text-sm leading-none"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            {aiSuggestions.new.map(name => (
-              <span
-                key={name}
-                onClick={() => acceptSuggestion(name)}
-                className="flex items-center gap-1 text-xs border border-dashed border-violet-300 bg-violet-50/30 text-violet-600 px-2.5 py-1 rounded cursor-pointer hover:bg-violet-50 transition-colors font-medium"
-              >
-                + {name} <SparkleIcon />
-                <button
-                  onClick={(e) => { e.stopPropagation(); dismissSuggestion(name) }}
-                  className="ml-0.5 text-violet-400 hover:text-violet-600 text-sm leading-none"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
         )}
       </div>
     </div>

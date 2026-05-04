@@ -73,7 +73,7 @@ export function Sidebar() {
         {labels.length > 0 && (
           <div className="mx-2">
             <p className="px-3 mb-1 text-xs font-medium text-zinc-400 uppercase tracking-wider">
-              Labels
+              Tags
             </p>
             {labels.map(label => (
               <button

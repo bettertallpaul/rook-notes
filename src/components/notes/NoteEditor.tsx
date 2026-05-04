@@ -122,7 +122,7 @@ export function NoteEditor() {
       {/* White content area with rounded top */}
       <div className="flex-1 min-h-0 flex flex-col rounded-t-lg bg-white overflow-hidden">
 
-      {/* Title + Labels */}
+      {/* Title + Tags */}
       <div className="shrink-0 px-6 pt-5 pb-3">
         <input
           ref={titleRef}
