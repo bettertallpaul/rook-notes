@@ -126,7 +126,7 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
           {appliedLabels.map(labelObj => (
             <span
               key={labelObj.name}
-              className="group flex items-center gap-1.5 text-xs bg-red-50 text-red-600 px-2 py-1 rounded-md transition-colors"
+              className="group flex items-center gap-1.5 text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded-md border border-transparent transition-colors"
             >
               {labelObj.name}
               <button
@@ -142,54 +142,69 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
             </span>
           ))}
 
-          {/* Input field - naturally follows user tags */}
-          <div className="flex-1 min-w-[100px] flex items-center">
+          {/* Input field - naturally follows user tags with "Ghost Tag" pattern */}
+          <div className="flex items-center bg-red-50/50 border border-dashed border-red-200 rounded-md px-2.5 py-1 w-24">
             <input
               ref={inputRef}
               type="text"
               value={input}
-              onChange={e => { setInput(e.target.value); setHighlightedIndex(0) }}
+              onChange={e => {
+                setInput(e.target.value)
+                setHighlightedIndex(0)
+                if (aiSuggestions) setAiSuggestions(null)
+              }}
               onKeyDown={handleKeyDown}
               onBlur={() => { commitLabel() }}
-              placeholder="Add tags…"
-              className="w-full bg-transparent text-sm text-zinc-500 placeholder-zinc-400 outline-none"
+              placeholder="+ Add tag"
+              className="w-full bg-transparent text-xs text-red-600 placeholder-red-400/60 outline-none"
             />
           </div>
 
-          {/* AI Suggestions - now inline */}
-          {aiSuggestions && (
-            <>
-              {aiSuggestions.existing.map(name => (
-                <span
-                  key={name}
-                  onClick={() => acceptSuggestion(name)}
-                  className="flex items-center gap-1 text-xs bg-violet-100 text-violet-700 px-2.5 py-1 rounded-md cursor-pointer hover:bg-violet-200 transition-colors font-medium"
-                >
-                  + {name}
-                </span>
-              ))}
-              {aiSuggestions.new.map(name => (
-                <span
-                  key={name}
-                  onClick={() => acceptSuggestion(name)}
-                  className="flex items-center gap-1 text-xs border border-dashed border-violet-300 bg-violet-50/30 text-violet-600 px-2.5 py-1 rounded-md cursor-pointer hover:bg-violet-50 transition-colors font-medium"
-                >
-                  + {name} ✨
-                </span>
-              ))}
-            </>
-          )}
-
-          {/* Suggest Tags Button - flows inline */}
+          {/* Suggest Tags Button - flows inline with stronger affordance and toggle state */}
           <button
-            onClick={(e) => { e.stopPropagation(); handleSuggestTags() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (aiSuggestions && (aiSuggestions.existing.length > 0 || aiSuggestions.new.length > 0)) {
+                setAiSuggestions(null)
+              } else {
+                handleSuggestTags()
+              }
+            }}
             disabled={isSuggesting}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 cursor-pointer border border-transparent"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-zinc-500 hover:text-zinc-900 bg-transparent rounded-md border border-transparent transition-colors disabled:opacity-50 cursor-pointer"
           >
             <span className="text-violet-500">✨</span>
-            {isSuggesting ? 'Suggesting...' : 'Suggest Tags'}
+            {aiSuggestions && (aiSuggestions.existing.length > 0 || aiSuggestions.new.length > 0) ? (
+              <>{isSuggesting ? 'Suggesting...' : 'Clear'}</>
+            ) : (
+              <>{isSuggesting ? 'Suggesting...' : 'Suggest Tags'}</>
+            )}
           </button>
         </div>
+
+        {/* AI Suggestions - dedicated row below to prevent horizontal layout shift */}
+        {aiSuggestions && (aiSuggestions.existing.length > 0 || aiSuggestions.new.length > 0) && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 transition-all duration-200 ease-in-out">
+            {aiSuggestions.existing.map(name => (
+              <span
+                key={name}
+                onClick={() => acceptSuggestion(name)}
+                className="flex items-center gap-1 text-xs bg-violet-100 text-violet-700 px-2.5 py-1 rounded-md border border-transparent cursor-pointer hover:bg-violet-200 transition-colors font-medium"
+              >
+                + {name}
+              </span>
+            ))}
+            {aiSuggestions.new.map(name => (
+              <span
+                key={name}
+                onClick={() => acceptSuggestion(name)}
+                className="flex items-center gap-1 text-xs border border-dashed border-violet-300 bg-violet-50/30 text-violet-600 px-2.5 py-1 rounded-md cursor-pointer hover:bg-violet-50 transition-colors font-medium"
+              >
+                + {name} ✨
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Autocomplete dropdown */}
         {suggestions.length > 0 && (
