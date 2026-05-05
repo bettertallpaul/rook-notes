@@ -88,6 +88,19 @@ Shared volumes: `node_modules` (named), `notes_data` (named, mounted at `/app/da
 | `make fresh` | Purge everything, rebuild, wait for API, then seed |
 | `make purge` | Tear down containers, volumes, and local images |
 
+## AI Configuration
+
+The AI features (like tag suggestions) are configured via environment variables in `.env`.
+
+- `GOOGLE_GENERATIVE_AI_API_KEY` : Your Google AI API Key.
+- `TAXONOMY_MODEL` : The model identifier (e.g., `gemini-2.5-flash-lite` or `gemini-2.5-pro`).
+
+To apply changes to `.env` (like switching models), you must restart the containers to pick up the new environment variables:
+
+```bash
+make down && make up
+```
+
 ## MCP Tools (intent-based)
 
 | Tool | Description |
