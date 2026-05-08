@@ -1,10 +1,6 @@
 # Rook Notes
 
-> A fast, minimal, markdown-based note-taking app — built as a playground for AI-assisted development, exploring APIs, MCP server, AI integration and evals.
-
-## What is Rook?
-
-A fast, minimal, markdown-based note-taking app. See [rook-prd.md](rook-prd.md) for the full product vision. Current state is a working prototype with a React frontend, Express API, and MCP server — all running in Docker.
+> A fast, minimal, markdown-based note-taking app — built as a playground for exploring AI-assisted development and tooling, including  MCP server, AI integration and evals.
 
 ## Tech Stack
 
@@ -17,7 +13,7 @@ A fast, minimal, markdown-based note-taking app. See [rook-prd.md](rook-prd.md) 
 | Evaluation | Promptfoo (LLM evals) |
 | Data | JSON file store on disk (`data/notes.json`), Docker named volume |
 | Schemas | Zod (single source of truth in `src/shared/schemas.ts`) |
-| Runtime | Docker Compose (3 services), Node 24 (Bookworm) |
+| Runtime | Docker Compose (3 services), Node 22 (Bookworm) |
 
 ## Architecture
 
@@ -55,9 +51,13 @@ A fast, minimal, markdown-based note-taking app. See [rook-prd.md](rook-prd.md) 
 | `tests/promptfoo/` | LLM evaluation suite (benchmarks & prompts) |
 | `src/store/useNoteStore.ts` | Zustand store: client-side state, optimistic updates, API calls |
 | `src/App.tsx` | Root component: SSE subscription, initial fetch |
-| `src/components/layout/Sidebar.tsx` | Label filters, lifecycle filters, sort controls |
+| `src/components/layout/Sidebar.tsx` | Tag filters, lifecycle filters |
 | `src/components/layout/MainPanel.tsx` | Note list + editor layout |
+| `src/components/notes/NoteList.tsx` | Note list, sort controls, and search bar layout |
 | `src/components/notes/NoteEditor.tsx` | TipTap markdown editor |
+| `src/components/notes/LabelEditor.tsx` | Tag/Label editor with opt-in AI suggestion row |
+| `src/components/notes/SortControl.tsx` | Sorting dropdown control |
+| `src/components/search/SearchBar.tsx` | Live keyword search input |
 | `docker-compose.yml` | 3 services: `app` (Vite), `api` (Express), `mcp` |
 | `Dockerfile.dev` | `node:22-bookworm-slim`, npm install, dev server |
 | `Makefile` | Task runner (see commands below) |
@@ -90,7 +90,7 @@ Shared volumes: `node_modules` (named), `notes_data` (named, mounted at `/app/da
 
 ## AI Configuration
 
-The AI features (like tag suggestions) are configured via environment variables in `.env`.
+The AI features (currently limited to tag suggestions) are configured via environment variables in `.env`.
 
 - `GOOGLE_GENERATIVE_AI_API_KEY` : Your Google AI API Key.
 - `TAXONOMY_MODEL` : The model identifier (e.g., `gemini-2.5-flash-lite` or `gemini-2.5-pro`).
@@ -145,8 +145,8 @@ MCP config for Claude Code (`~/.claude/settings.json` or `.claude/settings.local
 - **Single source of truth** — Zod schemas in `src/shared/schemas.ts`. To add a field to the Note model: update `schemas.ts`, then `store.ts`. API and MCP pick it up automatically.
 - **Stateless MCP** — each request creates a fresh `McpServer` instance. No session management needed.
 - **`tsx watch`** — API and MCP servers auto-reload on file changes. Occasionally may need `docker compose restart api` or `docker compose restart mcp` if changes aren't picked up.
-- **Opt-In Intelligence** — AI features are explicitly triggered by the user to preserve agency and manage API quotas.
-- **Bubbled Error Handling** — Backend and AI errors are bubbled up as raw messages to the UI. This ensures actionable feedback (e.g., API timeouts, quota limits) via global toast notifications instead of generic "Failed" messages.
+- **Opt-In Intelligence** — AI features (currently limited to _Suggest Tags_) are explicitly triggered by the user to preserve agency and manage API quotas.
+- **Bubbled Error Handling** — Backend and AI errors are bubbled up as raw messages to the UI. This ensures actionable feedback (e.g., API timeouts, quota limits) via global toast notifications (using Sonner) instead of generic "Failed" messages.
 
 ## Getting Started
 
@@ -157,5 +157,4 @@ make fresh   # purge, build, start, seed sample data
 Then open http://localhost:5173 for the app, http://localhost:3001/docs for API docs.
 
 ## Task Tracking
-
-See [mcp-server-integration-tasks.md](plans/mcp-server-integration-tasks.md) for completed phases and current status.
+See `/plans/` for PRDs, specs, mocks and tasks.

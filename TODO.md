@@ -1,4 +1,4 @@
 ## TODOS
-1. Polish UI for AI suggested tags, it doesn't match the mock (all in a one row, sparkle icon, button styling)
-2. Flesh out evals: currently only two test cases? Need to add `test-ai` or similar in makefile. Also check if current `make test` is up to date. Should it be split in core app vs AI features?
-3. UI pattern for error handling. For now, simple top of the page banner or toast notifications.
+1. **Fix `make test` execution:** Add a `"test"` script to `package.json` so that the `make test` command successfully executes tests inside the container instead of failing with a missing script error.
+2. **Expand AI Evaluations:** Determine if the taxonomy evaluations need more test cases (beyond the current two synthetic cases in `dataset.json`) to thoroughly benchmark tag suggestions.
+3. **Integrate `make test-ai`:** Include a specific `test-ai` target in the `Makefile` and decide whether to keep LLM evaluations separate from standard core application testing (`make test`).

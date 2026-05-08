@@ -86,11 +86,19 @@ To support the requirements above, the project will utilize the following techno
     -   **Eval Trigger:** Automatically run the synthetic evaluation suite whenever the chunking strategy is modified to measure the impact on retrieval relevancy.
     -   **Retrieval & Metadata Filtering:** Support pre-filtering by metadata (e.g., filtering by `#tags`) before performing the top-k vector similarity search. Embed user query -> perform filtered search -> pass retrieved chunks + query to LLM -> stream response to UI.
     -   **UI/UX:** Requires a new Chat UI component in React capable of handling streaming text responses (via standard SSE or framework callbacks) and uniquely displaying citations/references to build user trust.
+    -   **Open Architectural Questions:**
+        -   **Vector Sync Guarantee:** How are Weaviate updates triggered reliably? Does `store.ts` emit an internal Node event on every CRUD operation? What is the reconciliation strategy if the vector upsert fails but the JSON save succeeds?
+        -   **Streaming Responses:** Do we broadcast the streaming text chunks over the existing `/api/events` SSE connection, or do we create a dedicated streaming HTTP endpoint specifically leveraging Vercel AI SDK?
+        -   **Semantic Taxonomy Pivot:** Once the vector store is live, should we replace the current keyword-based tag pre-filtering with a semantic similarity search to nudge relevant existing tags?
+        -   **Consolidating Zod Schemas:** As more AI features are added, should we consolidate all Zod validation into a domain-driven structure (e.g., `src/shared/schemas/ai.ts`) to ensure reusability between the application logic and evaluation suites?
 -   **Milestone 3 (Deduplication Agent):**
     
     -   **Flow:** Create a scheduled batch job (e.g., running nightly via cron) rather than triggering on every save, preventing O(N²) compute spikes. When run, it queries the semantic index for note pairs with high cosine similarity scores.
     -   **Agentic Logic:** Pass the highly similar pairs to an LLM "Evaluator" agent to determine if they are true duplicates or just related concepts. If true duplicates, trigger a "Merge" agent to combine the text logically.
     -   **UI/UX:** Requires scoping a "Merge Review" UI queue (e.g., a new tab in the Sidebar) where users can view a diff of the LLM's proposed merge and explicitly approve or reject it, keeping a human-in-the-loop.
+    -   **Open Architectural Questions:**
+        -   **Storing Merge Proposals:** How is the LLM's proposed merge stored? Does `NoteSchema` gain a `status: "draft"` field and `mergedFromIds: string[]`, or do we create a separate `MergeProposalSchema` that does not touch `notes.json` until approved?
+        -   **Worker Container vs. API Process:** Does the heavy agentic workload run inside the existing `api` Docker container using `node-cron`, or do we introduce a dedicated `worker` service in `docker-compose.yml` to isolate compute?
 
 ### 2. Observability, Synthetic Testing & Performance
 
