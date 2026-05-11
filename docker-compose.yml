@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: npm run api
+    command: pnpm run api
     volumes:
       - .:/app
       - node_modules:/app/node_modules
@@ -34,7 +34,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: npm run mcp
+    command: pnpm run mcp
     volumes:
       - .:/app
       - node_modules:/app/node_modules

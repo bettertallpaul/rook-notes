@@ -1,116 +1,58 @@
 # Rook Notes
 
-> A fast, minimal, markdown-based note-taking app — built as a playground for exploring AI-assisted development and tooling, including  MCP server, AI integration and evals.
+A fast, minimal, markdown-based note-taking application built as a local-first playground for exploring modern developer workflows, AI-assisted tooling, and agentic integration frameworks.
 
-## Tech Stack
+## Core Vision & Features
 
-| Layer | Tech |
-|-------|------|
-| Frontend | React 18, Zustand, TipTap (markdown editor), Tailwind CSS 4, Vite, Sonner |
-| Backend API | Express 5, Zod validation, OpenAPI via `zod-to-openapi`, Scalar docs UI |
-| MCP Server | `@modelcontextprotocol/sdk`, Streamable HTTP transport, stateless |
-| AI | Vercel AI SDK, Google Gemini |
-| Evaluation | Promptfoo (LLM evals) |
-| Data | JSON file store on disk (`data/notes.json`), Docker named volume |
-| Schemas | Zod (single source of truth in `src/shared/schemas.ts`) |
-| Runtime | Docker Compose (3 services), Node 22 (Bookworm) |
+Rook Notes serves as a clean development environment designed for architectural exploration, combining a highly focused, minimalist user interface with powerful background primitives:
 
-## Architecture
+- **Minimalist Interface:** Focus-driven markdown editor powered by TipTap.
+- **Docker-First Runtime:** Eliminates dependency drift by scoping Node environments and toolchains entirely within isolated containers.
+- **Model Context Protocol (MCP):** Exposes core application logic to agentic clients (like Claude Code).
+- **Real-Time Synchronization:** Bi-directional updates using Server-Sent Events (SSE) for instant refresh across connected browser tabs and API updates.
+- **Opt-In Intelligence:** Tag suggestions using the Google Gemini API, keeping AI features strictly additive to control token spend.
+- **Stateless Validation:** Relies on Zod as the singular source of truth across frontend, backend API, and agent schema layers.
+- **Interactive API Documentation:** Full suite of testing and development capabilities through an embedded Scalar UI.
 
-```
-                                              data/notes.json
-                                                   ▲
-┌─────────────┐   SSE + fetch   ┌─────────────┐    │ JSON
-│  React App  │◄───────────────►│ Express API │────┘
-│   :5173     │                 │   :3001     │
-└─────────────┘                 └──────▲──────┘
-                                       │
-                    ┌──────────────────┴──────────────────┐
-                    │ HTTP                                │ HTTP
-             ┌──────▼──────┐                       ┌──────▼──────┐
-             │ MCP Server  │                       │ AI Service  │
-             │  :3002/mcp  │                       │  (Gemini)   │
-             └─────────────┘                       └─────────────┘
-```
+## Quick Start
 
-- **MCP is a consumer of the HTTP API** — it does not import `store.ts` directly. This means extending the data model only requires changes in `schemas.ts` + `store.ts`.
-- **SSE** (`/api/events`) pushes `data: changed` to all connected browsers after every mutation. The React app re-fetches the note list on each event.
-- **Vite** proxies `/api/*` to the `api` service and disables buffering for SSE.
+### Prerequisites
 
-## Key Files
+- Docker and Docker Compose
+- GNU Make
+- A Google Generative AI API Key (optional, required for AI taxonomy features)
 
-| File | Purpose |
-|------|---------|
-| `src/shared/schemas.ts` | Zod schemas: `NoteSchema`, `CreateNoteSchema`, `UpdateNoteSchema`, `AddLabelSchema`. All types derived here. |
-| `src/types/note.ts` | Re-exports `Note` from schemas; defines UI-only types (`SortMode`, `LifecycleFilter`) |
-| `src/server/store.ts` | JSON-file CRUD store for notes |
-| `src/server/api.ts` | Express API: REST routes, OpenAPI spec, SSE broadcast, Scalar docs at `/docs` |
-| `src/server/mcp.ts` | MCP server: 4 intent-based tools (`search_notes`, `create_note`, `edit_note`, `delete_note`) |
-| `src/server/ai/taxonomy.ts` | AI taxonomy service (Vercel AI SDK) |
-| `src/server/events/listeners.ts` | Event listeners for side-effects |
-| `tests/promptfoo/` | LLM evaluation suite (benchmarks & prompts) |
-| `src/store/useNoteStore.ts` | Zustand store: client-side state, optimistic updates, API calls |
-| `src/App.tsx` | Root component: SSE subscription, initial fetch |
-| `src/components/layout/Sidebar.tsx` | Tag filters, lifecycle filters |
-| `src/components/layout/MainPanel.tsx` | Note list + editor layout |
-| `src/components/notes/NoteList.tsx` | Note list, sort controls, and search bar layout |
-| `src/components/notes/NoteEditor.tsx` | TipTap markdown editor |
-| `src/components/notes/LabelEditor.tsx` | Tag/Label editor with opt-in AI suggestion row |
-| `src/components/notes/SortControl.tsx` | Sorting dropdown control |
-| `src/components/search/SearchBar.tsx` | Live keyword search input |
-| `docker-compose.yml` | 3 services: `app` (Vite), `api` (Express), `mcp` |
-| `Dockerfile.dev` | `node:22-bookworm-slim`, npm install, dev server |
-| `Makefile` | Task runner (see commands below) |
-| `scripts/seed.sh` | Creates 6 sample notes via API |
+### Setup and Launch
 
-## Docker Services
+1. **Configure Environment**
+   Create a `.env` file in the project root with the following keys:
+   ```env
+   GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
+   TAXONOMY_MODEL=gemini-2.5-flash-lite
+   ```
 
-| Service | Command | Port | Notes |
-|---------|---------|------|-------|
-| `app` | `npm run dev` (Vite) | 5173 | Proxies `/api` to `api:3001` |
-| `api` | `npm run api` (tsx watch) | 3001 | REST API + SSE + Scalar docs |
-| `mcp` | `npm run mcp` (tsx watch) | 3002 | `API_BASE_URL=http://api:3001` |
+2. **Boot the Stack**
+   Use the built-in bootstrap command to purge existing data, construct services, install dependencies, and seed sample content.
+   ```bash
+   make fresh
+   ```
 
-Shared volumes: `node_modules` (named), `notes_data` (named, mounted at `/app/data`), source bind-mount.
+3. **Access Services**
+   - **App Frontend:** http://localhost:5173
+   - **API Docs (Scalar):** http://localhost:3001/docs
+   - **MCP Server:** http://localhost:3002/mcp
 
-## Makefile Commands
+## Agentic Integration (MCP)
 
-| Command | What it does |
-|---------|-------------|
-| `make up` | Build and start all services (detached) |
-| `make dev` | Start all services (foreground, with logs) |
-| `make down` | Stop all services |
-| `make shell` | Open bash in the `app` container |
-| `make install` | Run `npm install` inside container |
-| `make build` | Run `npm run build` inside container |
-| `make test` | Run `npm test` inside container |
-| `make seed` | Populate sample notes via API |
-| `make fresh` | Purge everything, rebuild, wait for API, then seed |
-| `make purge` | Tear down containers, volumes, and local images |
+Rook Notes hosts a fully operational Model Context Protocol (MCP) server, enabling agents like Claude to inspect, generate, and manage notes directly on your behalf.
 
-## AI Configuration
+### Setup for Local Assistant Access
 
-The AI features (currently limited to tag suggestions) are configured via environment variables in `.env`.
+Follow these instructions to grant your local AI assistant access to Rook Notes.
 
-- `GOOGLE_GENERATIVE_AI_API_KEY` : Your Google AI API Key.
-- `TAXONOMY_MODEL` : The model identifier (e.g., `gemini-2.5-flash-lite` or `gemini-2.5-pro`).
+#### Claude Code Integration
+Update your configuration (`~/.claude/settings.json` or `.claude/settings.local.json`):
 
-To apply changes to `.env` (like switching models), you must restart the containers to pick up the new environment variables:
-
-```bash
-make down && make up
-```
-
-## MCP Tools (intent-based)
-
-| Tool | Description |
-|------|-------------|
-| `search_notes` | Search by keyword or list all notes |
-| `create_note` | Create note with title, content, and labels in one shot |
-| `edit_note` | Update title/content and reconcile labels to a desired final set (supports object-based schema) |
-| `delete_note` | Delete a note by ID |
-
-MCP config for Claude Code (`~/.claude/settings.json` or `.claude/settings.local.json`):
 ```json
 {
   "mcpServers": {
@@ -122,39 +64,44 @@ MCP config for Claude Code (`~/.claude/settings.json` or `.claude/settings.local
 }
 ```
 
-## API Endpoints
+#### Antigravity Integration
+Manage MCP server connections through Antigravity settings:
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| `GET` | `/api/notes` | List notes (optional `?q=` for search) |
-| `GET` | `/api/notes/:id` | Get single note |
-| `POST` | `/api/notes` | Create note |
-| `PATCH` | `/api/notes/:id` | Update note |
-| `DELETE` | `/api/notes/:id` | Delete note |
-| `POST` | `/api/notes/:id/labels` | Add label |
-| `DELETE` | `/api/notes/:id/labels/:label` | Remove label |
-| `POST` | `/api/notes/:id/suggest-tags` | Get AI-suggested tags for a note |
-| `GET` | `/api/events` | SSE stream (real-time updates) |
-| `GET` | `/openapi.json` | OpenAPI spec |
-| `GET` | `/docs` | Scalar API docs UI |
-
-## Design Decisions
-
-- **No `node_modules` on host** — lives in a Docker named volume. IDE may show import errors; code runs correctly in containers.
-- **Optimistic updates** — Zustand store updates immediately, then fires API call. SSE ensures consistency across clients.
-- **Single source of truth** — Zod schemas in `src/shared/schemas.ts`. To add a field to the Note model: update `schemas.ts`, then `store.ts`. API and MCP pick it up automatically.
-- **Stateless MCP** — each request creates a fresh `McpServer` instance. No session management needed.
-- **`tsx watch`** — API and MCP servers auto-reload on file changes. Occasionally may need `docker compose restart api` or `docker compose restart mcp` if changes aren't picked up.
-- **Opt-In Intelligence** — AI features (currently limited to _Suggest Tags_) are explicitly triggered by the user to preserve agency and manage API quotas.
-- **Bubbled Error Handling** — Backend and AI errors are bubbled up as raw messages to the UI. This ensures actionable feedback (e.g., API timeouts, quota limits) via global toast notifications (using Sonner) instead of generic "Failed" messages.
-
-## Getting Started
-
-```bash
-make fresh   # purge, build, start, seed sample data
+```json
+{
+  "mcpServers": {
+    "rook-notes": {
+      "serverUrl": "http://localhost:3002/mcp",
+      "disabled": true
+    }
+  }
+}
 ```
 
-Then open http://localhost:5173 for the app, http://localhost:3001/docs for API docs.
+### Available Agent Capabilities
+Once connected, the assistant automatically inherits intent-based capabilities including keyword searching, full lifecycle CRUD management of notes, and automatic label reconciliation.
 
-## Task Tracking
-See `/plans/` for PRDs, specs, mocks and tasks.
+## Developer Workflow
+
+The workspace manages daily tasks through a unified Makefile interface.
+
+| Command | Function |
+| :--- | :--- |
+| `make up` | Bring all services online (detached mode). |
+| `make dev` | Run stack in foreground with combined log visibility. |
+| `make shell` | Drop into an interactive shell inside the primary `app` container. |
+| `make install` | Execute `pnpm install` within the active container. |
+| `make build` | Generate production builds within the active container. |
+| `make test` | Execute local tests, including LLM prompt evaluation frameworks. |
+| `make down` | Halt all operational containers gracefully. |
+| `make purge` | Deep clean environment (removes images, volumes, and `node_modules`). |
+| `make seed` | Repopulate standard test data via seed script. |
+| `make fresh` | Composite command to wipe, rebuild, and re-seed (`purge` -> `up` -> `seed`). |
+
+## Associated Documentation
+
+Refer to the following deep-dive documentation tracks for specialized maintenance or implementation work:
+
+- **[ARCHITECTURE.md](ARCHITECTURE.md):** Deep-level system mappings, data flow, schema contracts, and infrastructure layout optimized for technical ingestion.
+- **[DESIGN.md](DESIGN.md):** Style guidelines, color palettes, typography scales, and UI component philosophy.
+- **[Plans Directory](plans/):** Historical audit trail, upcoming product requirements, and active roadmap milestones.

@@ -11,8 +11,13 @@ post() {
     -H "Content-Type: application/json" \
     -d "$data")
   
-  local status="${response: -3}"
-  local body="${response::-3}"
+  local len=${#response}
+  local status=""
+  local body=""
+  if [ "$len" -ge 3 ]; then
+    status="${response:$((len-3)):3}"
+    body="${response:0:$((len-3))}"
+  fi
   
   if [ "$status" -ne 201 ]; then
     echo "Error: Failed to create note (HTTP $status)"

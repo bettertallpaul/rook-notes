@@ -7,16 +7,16 @@ shell:
 	docker compose exec app bash
 
 install:
-	docker compose exec app npm install
+	docker compose exec app pnpm install
 
 dev:
 	docker compose up
 
 build:
-	docker compose exec app npm run build
+	docker compose exec app pnpm run build
 
 test:
-	docker compose exec app npm test
+	docker compose exec app pnpm test
 
 down:
 	docker compose down
