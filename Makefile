@@ -10,6 +10,11 @@ help: ## Show this help message
 
 up: ## Start containers in the background
 	docker compose up -d --build
+	@printf "\n\033[1;32mServices started successfully!\033[0m\n"
+	@printf "\033[1mURLs:\033[0m\n"
+	@printf "   App (Frontend):   \033[4;36mhttp://rook-notes.local\033[0m   (or http://localhost:5173)\n"
+	@printf "   API (Backend):     \033[4;36mhttp://api.rook-notes.local\033[0m   (or http://localhost:3001)\n"
+	@printf "   MCP Server:       \033[4;36mhttp://mcp.rook-notes.local\033[0m   (or http://localhost:3002)\n\n"
 
 shell: ## Open a bash shell in the app container
 	docker compose exec app bash
@@ -18,6 +23,11 @@ install: ## Install pnpm dependencies
 	docker compose exec app pnpm install
 
 dev: ## Start containers in the foreground
+	@printf "\n\033[1;32mStarting services in the foreground...\033[0m\n"
+	@printf "\033[1mURLs:\033[0m\n"
+	@printf "   App (Frontend):   \033[4;36mhttp://rook-notes.local\033[0m   (or http://localhost:5173)\n"
+	@printf "   API (Backend):     \033[4;36mhttp://api.rook-notes.local\033[0m   (or http://localhost:3001)\n"
+	@printf "   MCP Server:       \033[4;36mhttp://mcp.rook-notes.local\033[0m   (or http://localhost:3002)\n\n"
 	docker compose up
 
 build: ## Build the app

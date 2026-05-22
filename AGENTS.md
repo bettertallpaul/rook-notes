@@ -11,6 +11,7 @@ Assume projects run inside containers by default.
 - Use `node:24-bookworm-slim` \+ Corepack/pnpm for Node projects.  
 - Keep source bind-mounted, and use named volumes for `node_modules` and package caches.  
 - Bind dev servers to `0.0.0.0` inside container and publish ports in Compose.  
+- For HTTP services, configure OrbStack custom domains (`dev.orbstack.domains` labels) and print clickable local URL links in `Makefile` `up`/`dev` targets (avoid using emojis).  
 - Prefer ARM-native images on Apple Silicon; only force `linux/amd64` when required by dependencies.  
 - When troubleshooting, check in order:  
   1. `docker context ls`
