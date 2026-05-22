@@ -9,7 +9,11 @@
     "api": "tsx watch src/server/api.ts",
     "mcp": "tsx watch src/server/mcp.ts",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "design:lint": "npx @google/design.md lint DESIGN.md",
+    "design:diff": "npx @google/design.md diff DESIGN.md",
+    "design:export": "npx @google/design.md export",
+    "design:spec": "npx @google/design.md spec"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.71",
@@ -39,6 +43,7 @@
     "@types/react-dom": "^18.3.0",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "@google/design.md": "latest",
     "promptfoo": "^0.121.9",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.21.0",

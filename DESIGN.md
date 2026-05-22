@@ -8,12 +8,6 @@ colors:
   on-primary-container: "#B91C1C" # Darkened for WCAG AA contrast with container
   primary-hover: "#DC2626"
 
-  # AI Intelligence: "AI Violet"
-  ai: "#7C3AED"
-  on-ai: "#ffffff"
-  ai-container: "#ede9fe"
-  on-ai-container: "#6d28d9"
-
   # Neutral Foundations
   background: "#f9fafb"
   on-background: "#18181b"
@@ -21,6 +15,12 @@ colors:
   on-surface: "#18181b"
   on-surface-variant: "#52525b"
   on-surface-muted: "#71717a"
+
+  # AI Intelligence: "AI Violet"
+  ai: "#7C3AED"
+  on-ai: "#ffffff"
+  ai-container: "#ede9fe"
+  on-ai-container: "#6d28d9"  
 
   # Structural Elements
   caret: "{colors.primary}"
