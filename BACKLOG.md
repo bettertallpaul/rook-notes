@@ -1,16 +1,16 @@
 # Project Backlog
 
 ## Now
-- [ ] *(Empty)*
+- [X] *New prod build process w/ opsx*
+- [ ] **AI Milestone 2: Chat with my Vault:** Build semantic search and RAG integration to enable natural language queries over the knowledge base. Spec's out with opsx.
 
 ## Next
-- [ ] *(Empty)*
+- [ ] *Automate Cloud Run Setup* Run `/opsx-propose automate-cloud-run-setup` to create tasks and specs.
 
 ## Later
 - [ ] **Fix `make test` execution:** Add a `"test"` script to `package.json` so that the `make test` command successfully executes tests inside the container instead of failing with a missing script error.
 - [ ] **Expand AI Evaluations:** Determine if the taxonomy evaluations need more test cases (beyond the current two synthetic cases in `dataset.json`) to thoroughly benchmark tag suggestions.
 - [ ] **Integrate `make test-ai`:** Include a specific `test-ai` target in the `Makefile` and decide whether to keep LLM evaluations separate from standard core application testing (`make test`).
-- [ ] **AI Milestone 2: Chat with my Vault:** Build semantic search and RAG integration to enable natural language queries over the knowledge base.
 - [ ] **AI Milestone 3: Intelligent Deduplication:** Implement agentic workflow to proactively surface and resolve redundant note content.
 
 ## Completed
