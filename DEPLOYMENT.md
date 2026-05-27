@@ -23,7 +23,7 @@ The container build (defined in the `Dockerfile`) is split into two distinct sta
 In a cloud environment like Google Cloud Run, the container port is dynamically assigned at startup via the `${PORT}` environment variable. Additionally, backend service endpoints change across local and staging/production boundaries.
 - **Dynamic Port Binding**: The Nginx configuration template dynamically binds the server to `${PORT}` when the container boots.
 - **API Proxying**: All requests on the `/api` prefix are dynamically proxied downstream to the endpoint specified in the `${API_URL}` environment variable.
-- **Preserved Nginx Variables**: Using `NGINX_ENVSUBST_FILTER="PORT API_URL"`, the Nginx entrypoint only substitutes the dynamic environment variables, preserving built-in Nginx variables (like `$uri`, `$host`, `$http_upgrade`) required for proper routing and fallback.
+- **Preserved Nginx Variables**: Using `NGINX_ENVSUBST_FILTER="^(PORT|API_URL)$"`, the Nginx entrypoint only substitutes the dynamic environment variables, preserving built-in Nginx variables (like `$uri`, `$host`, `$http_upgrade`) required for proper routing and fallback.
 - **SPA Routing**: The `try_files $uri $uri/ /index.html` block ensures that any client-side route requests are served the main `index.html` file, letting React handle routing natively.
 
 ---
