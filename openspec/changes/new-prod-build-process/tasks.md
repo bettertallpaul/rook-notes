@@ -1,28 +1,28 @@
 ## 1. Dockerfile Infrastructure
 
-- [ ] 1.1 Create the production `Dockerfile` in the project root.
-- [ ] 1.2 Implement the multi-stage builder using `node:24-bookworm-slim` and `pnpm` to install and compile assets.
-- [ ] 1.3 Implement the runner stage using `nginx:alpine`, copying compiled assets and configuring default port/API_URL environments.
+- [x] 1.1 Create the production `Dockerfile` in the project root.
+- [x] 1.2 Implement the multi-stage builder using `node:24-bookworm-slim` and `pnpm` to install and compile assets.
+- [x] 1.3 Implement the runner stage using `nginx:alpine`, copying compiled assets and configuring default port/API_URL environments.
 
 ## 2. Nginx Server Configuration
 
-- [ ] 2.1 Create `nginx.conf.template` in the project root.
-- [ ] 2.2 Configure Nginx static asset serving and SPA routing handling in the template using the dynamic `${PORT}` environment.
-- [ ] 2.3 Configure the proxy block in the template to forward all requests under `/api` to `${API_URL}`.
+- [x] 2.1 Create `nginx.conf.template` in the project root.
+- [x] 2.2 Configure Nginx static asset serving and SPA routing handling in the template using the dynamic `${PORT}` environment.
+- [x] 2.3 Configure the proxy block in the template to forward all requests under `/api` to `${API_URL}`.
 
 ## 3. Makefile Devops Automation
 
-- [ ] 3.1 Modify the `Makefile` to add automated targets for `prod-build`, `prod-run`, `prod-test`, `prod-clean`, and `prod-verify`.
-- [ ] 3.2 Reorganize the entire `Makefile` into logical sections using commented headers (e.g. HELP / UTILITIES, DEVELOPMENT WORKFLOW, DATABASE / SEEDING, DESIGN SYSTEM TOOLS, and PRODUCTION VERIFICATION).
+- [x] 3.1 Modify the `Makefile` to add automated targets for `prod-build`, `prod-run`, `prod-test`, `prod-clean`, and `prod-verify`.
+- [x] 3.2 Reorganize the entire `Makefile` into logical sections using commented headers (e.g. HELP / UTILITIES, DEVELOPMENT WORKFLOW, DATABASE / SEEDING, DESIGN SYSTEM TOOLS, and PRODUCTION VERIFICATION).
 
 ## 4. Documentation
 
-- [ ] 4.1 Generate a comprehensive `DEPLOYMENT.md` file in the project root outlining the multi-stage architecture, local verification, and Google Cloud Run console setup steps.
+- [x] 4.1 Generate a comprehensive `DEPLOYMENT.md` file in the project root outlining the multi-stage architecture, local verification, and Google Cloud Run console setup steps.
 
 ## 5. Local Testing and Verification
 
-- [ ] 5.1 Run `make prod-verify` to execute the end-to-end automated build-run-test pipeline locally.
-- [ ] 5.2 Manually spin up the backend and production containers locally and verify full client-server data operations.
+- [x] 5.1 Run `make prod-verify` to execute the end-to-end automated build-run-test pipeline locally.
+- [x] 5.2 Manually spin up the backend and production containers locally and verify full client-server data operations.
 
 ## 6. Live Google Cloud Run Verification (User Step)
 
