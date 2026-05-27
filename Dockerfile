@@ -8,6 +8,8 @@ RUN corepack enable pnpm
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml* ./
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV ONNXRUNTIME_NODE_INSTALL=skip
 RUN pnpm install --frozen-lockfile
 
 COPY . .
