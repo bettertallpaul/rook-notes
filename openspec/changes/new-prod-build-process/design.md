@@ -49,25 +49,12 @@ We will create a `DEPLOYMENT.md` file in the root of the repository to serve as 
   - Architecture overview (builder stage, Nginx runner stage, dynamic port binding, SPA routing).
   - Local validation options (automated `make prod-verify` and manual individual Makefile targets).
   - Detailed step-by-step console instructions for connecting the GitHub repository to Google Cloud Run with Cloud Build triggers.
+  - Live production service verification steps (accessing the public HTTPS URL in a web browser and verifying active API requests).
   - Operational gotchas (such as in-memory state reset on scale-down, pnpm headless build parameters).
-
-### 7. Branching Workflow Transition
-To align with a safe release strategy where production builds are triggered automatically from the `main` branch, all ongoing development work should occur on a dedicated `dev` branch.
-- **Option A: Antigravity IDE GUI Method (Recommended)**:
-  1. Click on the active branch name (usually `main`) in the **Status Bar** (bottom-left corner of the IDE) or open the Command Palette (`Cmd+Shift+P`) and type `Git: Checkout to...`.
-  2. Select **`+ Create new branch...`** from the dropdown menu.
-  3. Type `dev` as the new branch name and press `Enter`.
-  4. Navigate to the **Source Control View** (click the source control branch icon in the Activity Bar on the far left, or press `Ctrl+Shift+G`).
-  5. Click the **Publish Branch** button to push `dev` to the remote repository and establish upstream tracking.
-- **Option B: Command Line Method**:
-  1. Ensure you are on the latest `main` branch: `git checkout main && git pull`
-  2. Create and switch to the `dev` branch locally: `git checkout -b dev`
-  3. Push the `dev` branch to the remote repository: `git push -u origin dev`
-- **Future Practices**: Ensure `dev` remains the active development branch. All future features and bugfixes are committed to `dev` first. When ready to release, open a Pull Request from `dev` to `main` (which will trigger the automated Cloud Run build upon merge).
-
 
 
 ## Risks / Trade-offs
+
 
 - **[Risk]** API Proxy path routing fails in production.
   - **[Mitigation]** The Nginx configuration matches precisely `/api` and forwards the request downstream via `proxy_pass ${API_URL}`, preserving headers and upgrade parameters to maintain WebSocket or standard session compatibility if needed.
