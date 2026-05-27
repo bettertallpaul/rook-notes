@@ -8,7 +8,10 @@ To support reliable production deployments of the rook-notes React SPA (such as 
 - Add an `nginx.conf.template` to dynamically route `/api` requests to a configurable `API_URL` and support standard port bindings through `${PORT}`.
 - Add new `Makefile` targets (`prod-build`, `prod-run`, `prod-test`, `prod-clean`, and `prod-verify`) for local automation and testing.
 - Add a comprehensive `DEPLOYMENT.md` guide detailing Cloud Run deployment steps and local validation.
-- Provide clear instructions for a one-off git branching transition from developing on `main` to a `dev` branch.
+- Define clear verification steps for the live deployed Google Cloud Run HTTPS service endpoint.
+
+
+
 
 
 ## Capabilities

@@ -42,12 +42,13 @@ The project root SHALL contain a `DEPLOYMENT.md` markdown file documenting the a
 - **WHEN** the user opens `DEPLOYMENT.md` in the project root
 - **THEN** they are presented with detailed, succinct instructions to verify the production build locally and deploy the React SPA via the Google Cloud Console.
 
-### Requirement: Branching Workflow Transition Instructions
-The project SHALL include clear git branching transition steps inside its tasks and documentation, providing a one-off workflow to move development off the `main` branch to a new `dev` branch using either the Command Line Interface (CLI) or the Google Antigravity IDE graphical user interface (GUI).
+#### Scenario: Verifying live Cloud Run deployment
+- **WHEN** the user accesses the live public Google Cloud Run HTTPS URL in a web browser
+- **THEN** the React SPA successfully loads, and requests to `/api` are dynamically proxied downstream to the live API backend service.
 
-#### Scenario: Initializing the dev branch transition
-- **WHEN** the user executes the transition instructions using either CLI commands or Antigravity IDE GUI actions
-- **THEN** the local and remote repositories successfully establish a `dev` branch where all subsequent features/bugfixes are implemented.
+
+
+
 
 
 
