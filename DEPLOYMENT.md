@@ -76,7 +76,7 @@ Because active development takes place on the `dev` branch, your newly created p
      git push origin dev
      ```
 2. Navigate to your GitHub repository in your web browser.
-3. Open a new **Pull Request** from `dev` to `main`, review the changes, and click **Merge Pull Request**.
+3. Click **Compare & pull request** (or open a new Pull Request), configure the source as `dev` and target as `main`, click **Create pull request**, and then click **Merge pull request** after reviewing.
 
 ### Option B: Local Command Line Merge
 If you prefer to perform the merge locally using the command line and push directly to `main`:
@@ -104,6 +104,13 @@ Once your `main` branch contains these production deployment files, proceed with
 
 Follow these console instructions to connect your GitHub repository and deploy the frontend service to Google Cloud Run.
 
+> [!TIP]
+> **How to Stay in the Perpetual Free Tier:**
+> * **CPU & Billing**: Under *CPU allocation and pricing*, select **Request-based** (CPU only allocated during request processing).
+> * **Scaling**: Set **Minimum instances** to `0` so the container spins down when idle (always-on instances will consume your free hours).
+> * **Resources**: Set memory to `512 MiB` and CPU to `1 vCPU` under the Container Resources tab.
+> * **Region**: Choose a Tier 1 region close to you (e.g. `us-east1` South Carolina) to optimize latency and free egress data bounds.
+
 ### Step 1: Connect the GitHub Repository
 1. Navigate to the [Google Cloud Console](https://console.cloud.google.com/).
 2. Open the **Cloud Run** service page and click **Create Service**.
@@ -118,14 +125,17 @@ Follow these console instructions to connect your GitHub repository and deploy t
 4. Click **Save** to complete the Cloud Build trigger setup.
 
 ### Step 3: Configure Container and Environment Variable Settings
-1. In the **Create Service** form, specify your service name (e.g., `rook-notes-frontend`) and select your desired region.
-2. Scroll down to **Container, Networking, Security** settings:
+1. In the **Create Service** form, specify your service name (e.g., `rook-notes-frontend`) and select a region close to you (e.g., `us-east1` for South Carolina, which is a low-cost Tier 1 region).
+2. Under **CPU allocation and pricing**, select **Request-based** (CPU is only allocated during request processing) to stay within the perpetual monthly Free Tier.
+3. Scroll down to **Container, Networking, Security** settings:
+   - **Scaling**: Set **Minimum instances** to `0` (essential for scale-to-zero when idle) and **Maximum instances** to `10` or less.
+   - **Container tab (Resources)**: Set **CPU** to `1` (or lower) and **Memory** to `512 MiB` (Nginx is extremely lightweight and requires minimal overhead).
    - **Container Port**: Set the container port matching your target port (defaults to `80`, but Cloud Run automatically injects this into `${PORT}`).
    - **Environment Variables**: Add an environment variable specifying your live API backend service url:
      - **Name**: `API_URL`
      - **Value**: The full HTTP/HTTPS URL of your active API backend (e.g., `https://api.rook-notes.example.com`).
-3. Under *Authentication*, select **Allow unauthenticated invocations** to make the React SPA publicly accessible.
-4. Click **Create** to launch the build and deployment process.
+4. Under *Authentication*, select **Allow unauthenticated invocations** to make the React SPA publicly accessible.
+5. Click **Create** to launch the build and deployment process.
 
 ---
 

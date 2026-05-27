@@ -1,11 +1,12 @@
 # Project Backlog
 
 ## Now
-- [X] *New prod build process w/ opsx*
+- [X] **New prod build process w/ opsx**
 - [ ] **AI Milestone 2: Chat with my Vault:** Build semantic search and RAG integration to enable natural language queries over the knowledge base. Spec's out with opsx.
 
 ## Next
-- [ ] *Automate Cloud Run Setup* Run `/opsx-propose automate-cloud-run-setup` to create tasks and specs.
+- [ ] **Include noindex instructions**
+- [ ] **Automate Cloud Run Setup** Run `/opsx-propose automate-cloud-run-setup` to create tasks and specs.
 
 ## Later
 - [ ] **Fix `make test` execution:** Add a `"test"` script to `package.json` so that the `make test` command successfully executes tests inside the container instead of failing with a missing script error.
