@@ -61,3 +61,15 @@ We will create a `DEPLOYMENT.md` file in the root of the repository to serve as 
 - **[Risk]** Hostname mapping issues during local test run on macOS (e.g. localhost of host vs container).
   - **[Mitigation]** The `prod-run` target configures `--add-host=host.docker.internal:host-gateway` and runs with `API_URL=http://host.docker.internal:3001` so that the local Nginx container can reach the backend dev API running on the host or in its compose environment.
 
+
+## Post-Implementation Learnings & Known Gaps
+
+During local verification and early Cloud Run iterations, it was realized that the production build pipeline only orchestrates the static App (Frontend) container. The backend Express API service and the MCP server are completely omitted from the Nginx Alpine container by design. 
+
+As a result:
+- The backend Express API service requires a dedicated Dockerfile and Cloud Run service to handle persistent data and API traffic.
+- The MCP server requires a dedicated deployment to process agentic intents in production.
+- Nginx's proxy configuration must be adjusted for Server-Sent Events (SSE) buffering and timeouts.
+
+These gaps will be addressed as first-class goals in the follow-up change: **`deploy-backend-services`**.
+
