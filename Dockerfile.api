@@ -11,7 +11,7 @@ COPY package.json pnpm-lock.yaml* ./
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV ONNXRUNTIME_NODE_INSTALL=skip
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
