@@ -1,168 +1,191 @@
 # Production Deployment Guide
 
-This document outlines the architecture, local verification process, and step-by-step instructions to deploy the **rook-notes** React SPA to Google Cloud Run.
+This document outlines the production architecture, local container verification processes, and step-by-step instructions to deploy the entire **rook-notes** multi-service application to Google Cloud Run.
 
 ---
 
 ## 1. Production Architecture Overview
 
-To ensure high performance, security, and low operational overhead, the production build transitions the application from a Node/Vite development server to a highly optimized, containerized static asset server.
+To ensure high performance, security, and low operational overhead, the production build transitions the application from a unified local development environment to an optimized, decoupled multi-service production container configuration. 
 
-### Multi-Stage Build Pipeline
-The container build (defined in the `Dockerfile`) is split into two distinct stages:
-1. **Builder Stage (`node:24-bookworm-slim`)**:
-   - Standardizes the Node.js runtime to match active development patterns.
-   - Enables `corepack pnpm` and uses local pnpm caching mounts to speed up dependency installs.
-   - Installs production and development dependencies, runs TypeScript validation, and compiles the React application using Vite into static HTML, JS, and CSS bundles under `/app/dist`.
-2. **Runner Stage (`nginx:alpine`)**:
-   - Discards all Node.js and build-tool overhead, leaving a lean Nginx Alpine container.
-   - Copies only the compiled static asset bundles into the Nginx public directory (`/usr/share/nginx/html`).
-   - Uses Nginx's template system under `/etc/nginx/templates/` to inject environment variables dynamically at container startup.
+Rather than a single monolith, the production environment packages and deploys **three separate co-equal container services**:
 
-### Dynamic Port and API Routing
-In a cloud environment like Google Cloud Run, the container port is dynamically assigned at startup via the `${PORT}` environment variable. Additionally, backend service endpoints change across local and staging/production boundaries.
-- **Dynamic Port Binding**: The Nginx configuration template dynamically binds the server to `${PORT}` when the container boots.
-- **API Proxying**: All requests on the `/api` prefix are dynamically proxied downstream to the endpoint specified in the `${API_URL}` environment variable.
-- **Preserved Nginx Variables**: Using `NGINX_ENVSUBST_FILTER="^(PORT|API_URL)$"`, the Nginx entrypoint only substitutes the dynamic environment variables, preserving built-in Nginx variables (like `$uri`, `$host`, `$http_upgrade`) required for proper routing and fallback.
-- **SPA Routing**: The `try_files $uri $uri/ /index.html` block ensures that any client-side route requests are served the main `index.html` file, letting React handle routing natively.
+1. **Frontend Client (`Dockerfile.app`)**:
+   - **Base**: `nginx:alpine`
+   - **Role**: Discards all Node.js and build-tool overhead, leaving a lean Nginx Alpine web server. It serves the pre-compiled static React client bundle (compiled in the first-stage `node:24-bookworm-slim` builder).
+   - **Routing**: Employs an unbuffered reverse-proxy block to route traffic from `/api` to the backend Express API service dynamically via the injected `${API_URL}` environment variable.
+
+2. **Express API Backend (`Dockerfile.api`)**:
+   - **Base**: `node:24-bookworm-slim`
+   - **Role**: Executes the core backend Express app directly (`npx tsx src/server/api.ts`) in a clean, non-watch production environment.
+   - **AI Integration**: Runs the AI tag suggestion taxonomy via the Vercel AI SDK, utilizing the `GOOGLE_GENERATIVE_AI_API_KEY` key.
+   - **SSE Streaming**: Manages real-time data change broadcasts to connected frontend clients via Server-Sent Events (SSE).
+
+3. **Stateless MCP Server (`Dockerfile.mcp`)**:
+   - **Base**: `node:24-bookworm-slim`
+   - **Role**: Executes the Streamable HTTP Model Context Protocol (MCP) server directly (`npx tsx src/server/mcp.ts`), providing intent-based tools (`search_notes`, `create_note`, `edit_note`, `delete_note`) for AI agent consumption.
+   - **Downstream Connection**: Resolves and communicates with the active Express API backend using the `API_BASE_URL` environment variable.
 
 ---
 
 ## 2. Local Production Verification
 
-Before pushing changes to GitHub and initiating a production deployment, always validate the production build container locally using OrbStack or standard Docker.
+Before pushing code changes to GitHub and triggering a cloud deployment, always validate the production build containers locally using OrbStack or standard Docker.
 
-### The Automated Verification Pipeline
-The simplest way to run a full end-to-end verification is using the unified `prod-verify` target:
+> [!IMPORTANT]
+> **PORT BINDING CONFLICTS WITH DEVELOPMENT ENVIRONMENT:**
+> Before running any production container lifecycle targets locally (like `make prod-run` or `make prod-verify`), **you must stand down your active local development containers** by running:
+> ```bash
+> make down
+> ```
+> Since both the development and production environments bind to the same host network ports (`3001` for Express API, `3002` for MCP server), attempting to run both simultaneously will cause a `Bind for 0.0.0.0:3001 failed: port is already allocated` network collision.
+
+### A. Full Multi-Service Verification (Recommended)
+To run a complete, automated end-to-end build, run, and connection verification pipeline for all three production containers simultaneously:
 ```bash
 make prod-verify
 ```
-This single target will:
-1. Stop and clean up any existing local production container instances.
-2. Build the production Docker image (`rook-notes:prod`) from scratch.
-3. Start the container in the background, mapping host port `8080` to the container port, and configured to route `/api` to the backend dev service running at `http://host.docker.internal:3001`.
-4. Poll the endpoint using `curl` to verify Nginx is actively and correctly serving the frontend.
-5. Tear down the local container cleanly once verification is complete.
+This orchestrated target will:
+1. Stop and clean up any existing local production container instances for all services.
+2. Build all three production Docker images (`Dockerfile.app`, `Dockerfile.api`, and `Dockerfile.mcp`) in parallel.
+3. Start all three containers in the background, properly configuring network ports and linking host gateway addresses between them.
+4. Execute `curl` checks against all three endpoints in sequence:
+   - Verifies the Frontend client serves dynamic resources correctly on port `8080`.
+   - Verifies the API backend responds on port `3001` (injecting your secure `.env` variables).
+   - Verifies the MCP server responds on port `3002`.
+5. Gracefully tear down all containers cleanly once verification is complete.
 
-### Step-by-Step Manual Local Testing
-If you want to manually test the production build locally:
+### B. Frontend-only Verification
+To run an automated build, run, and curl test pipeline strictly for the React web client and Nginx proxy layer:
+```bash
+make prod-app-verify
+```
+This target will build the React static bundles, serve them via a local Nginx Alpine container, test connection on `http://localhost:8080`, and clean up.
 
-1. **Build the production container image**:
-   ```bash
-   make prod-build
-   ```
-2. **Run the container**:
-   ```bash
-   make prod-run
-   ```
-3. **Verify locally in your browser**:
-   Navigate to [http://localhost:8080](http://localhost:8080).
-4. **Clean up container resources**:
-   ```bash
-   make prod-clean
-   ```
+### C. Backend-only Verification
+To compile, execute, and verify both backend containers (`api` and `mcp` services) in parallel:
+```bash
+make prod-backend-verify
+```
+This target compiles and runs the Express API (port `3001` mapping a local data volume) and MCP server (port `3002`), runs curl connectivity assertions, and stops the services.
 
-## 3. Preparing the Production Branch (First-Time Setup)
+### D. Manual Local Operations
+If you want to manually run and debug services in parallel locally:
+*   **Build all**: `make prod-build` (or individual targets: `make prod-app-build`, `make prod-api-build`, `make prod-mcp-build`)
+*   **Run all**: `make prod-run` (or individual targets: `make prod-app-run`, `make prod-api-run`, `make prod-mcp-run`)
+*   **Stop and Clean all**: `make prod-clean` (or individual targets: `make prod-app-clean`, `make prod-backend-clean`)
 
-Because active development takes place on the `dev` branch, your newly created production files (`Dockerfile`, `nginx.conf.template`, and `DEPLOYMENT.md`) currently only exist on `dev`. Google Cloud Run triggers are designed to build from your production branch (`main`). Therefore, you must push your `dev` changes to GitHub and merge them into `main` **before** connecting the repository in the Google Cloud Console.
+---
 
-### Option A: Open a Pull Request on GitHub (Recommended)
-1. Commit and push all your current local `dev` branch changes to GitHub:
-   - **IDE GUI Method**: Go to the **Source Control View** (`Ctrl+Shift+G`), enter a commit message, click the **Commit** checkmark, then click **Sync Changes** (or **Publish Branch** if it's the first push).
-   - **CLI Method**: Run:
-     ```bash
-     git add .
-     git commit -m "feat: implement production-grade two-stage build"
-     git push origin dev
-     ```
-2. Navigate to your GitHub repository in your web browser.
-3. Click **Compare & pull request** (or open a new Pull Request), configure the source as `dev` and target as `main`, click **Create pull request**, and then click **Merge pull request** after reviewing.
+## 3. Preparing the Production Branch
 
-### Option B: Local Command Line Merge
-If you prefer to perform the merge locally using the command line and push directly to `main`:
-1. Commit all outstanding changes on your `dev` branch.
-2. Checkout and update your local `main` branch:
-   ```bash
-   git checkout main
-   git pull origin main
-   ```
-3. Merge the `dev` branch into `main` and push:
-   ```bash
-   git merge dev
-   git push origin main
-   ```
-4. Switch back to your development branch to continue working:
-   ```bash
-   git checkout dev
-   ```
+Because active development takes place on the `dev` branch, your newly created production configurations currently only exist on `dev`. Google Cloud Run triggers are designed to build from your production branch (`main`). Therefore, you must push your `dev` changes to GitHub and merge them into `main` **before** connecting the services in the Google Cloud Console.
 
-Once your `main` branch contains these production deployment files, proceed with the console setup below.
+### Merge workflow:
+```bash
+git add .
+git commit -m "feat: implement multi-service production container setup"
+git push origin dev
+
+# Merge to main
+git checkout main
+git pull origin main
+git merge dev
+git push origin main
+git checkout dev
+```
 
 ---
 
 ## 4. Step-by-Step Google Cloud Run Console Setup
 
-Follow these console instructions to connect your GitHub repository and deploy the frontend service to Google Cloud Run.
+To deploy the entire rook-notes suite, you will configure and deploy **three separate Cloud Run services** sequentially.
 
 > [!TIP]
-> **How to Stay in the Perpetual Free Tier:**
-> * **CPU & Billing**: Under *CPU allocation and pricing*, select **Request-based** (CPU only allocated during request processing).
-> * **Scaling**: Set **Minimum instances** to `0` so the container spins down when idle (always-on instances will consume your free hours).
-> * **Resources**: Set memory to `512 MiB` and CPU to `1 vCPU` under the Container Resources tab.
-> * **Region**: Choose a Tier 1 region close to you (e.g. `us-east1` South Carolina) to optimize latency and free egress data bounds.
+> **Perpetual Free Tier Guidelines:**
+> - **CPU Allocation**: Select **Request-based** (CPU is only allocated during request processing) so you are not charged when services are idle.
+> - **Scaling**: Set **Minimum instances** to `0` (essential for scale-to-zero).
+> - **Resources**: Set memory to `512 MiB` and CPU to `1 vCPU` under the Container tab (more than enough for these lightweight services).
 
-### Step 1: Connect the GitHub Repository
-1. Navigate to the [Google Cloud Console](https://console.cloud.google.com/).
-2. Open the **Cloud Run** service page and click **Create Service**.
-3. Under *Source*, select **Deploy revision from a source repository** and click **Set up with Cloud Build**.
-4. Select your **Repository Provider** (GitHub) and authenticate.
-5. Select the `rook-notes` repository from your list and click **Next**.
+### Service 1: Express API Service (`rook-notes-api`)
+The API service acts as the heart of the system and must be deployed first so other services can reference its live URL.
 
-### Step 2: Configure the Build Trigger
-1. Under *Branch*, set the build trigger to run on the `main` branch (or your preferred release branch).
-2. Under *Build Type*, select **Dockerfile**.
-3. Set the *Source directory* to `/` (the root directory) and make sure the *Dockerfile* path points to `Dockerfile` (not `Dockerfile.dev`).
-4. Click **Save** to complete the Cloud Build trigger setup.
+1. Navigate to the **Cloud Run** console page and click **Create Service**.
+2. Select **Deploy revision from a source repository** and click **Set up with Cloud Build**.
+3. Select the `rook-notes` repository and click **Next**.
+4. Set the build trigger branch to `main`.
+5. Under **Build Type**, select **Dockerfile**. Set the path to `Dockerfile.api` and click **Save**.
+6. Name the service: `rook-notes-api` and choose a Tier 1 region close to you.
+7. Select **Request-based** CPU allocation and **Allow unauthenticated invocations**.
+8. Scroll down to **Container, Networking, Security** -> **Container tab**:
+   - Set **Container Port** to `3001` (Cloud Run dynamically forwards incoming traffic here).
+   - Set **Minimum instances** to `0` and **Maximum instances** to `5`.
+   - **Environment Variables**: Add your secure AI API key:
+     - **Name**: `GOOGLE_GENERATIVE_AI_API_KEY`
+     - **Value**: `[Your actual Google AI API Key]`
+9. Click **Create** to launch the deployment. Once complete, copy the generated HTTPS URL (e.g., `https://rook-notes-api-xxxxxx.a.run.app`).
 
-### Step 3: Configure Container and Environment Variable Settings
-1. In the **Create Service** form, specify your service name (e.g., `rook-notes-frontend`) and select a region close to you (e.g., `us-east1` for South Carolina, which is a low-cost Tier 1 region).
-2. Under **CPU allocation and pricing**, select **Request-based** (CPU is only allocated during request processing) to stay within the perpetual monthly Free Tier.
-3. Scroll down to **Container, Networking, Security** settings:
-   - **Scaling**: Set **Minimum instances** to `0` (essential for scale-to-zero when idle) and **Maximum instances** to `10` or less.
-   - **Container tab (Resources)**: Set **CPU** to `1` (or lower) and **Memory** to `512 MiB` (Nginx is extremely lightweight and requires minimal overhead).
-   - **Container Port**: Set the container port matching your target port (defaults to `80`, but Cloud Run automatically injects this into `${PORT}`).
-   - **Environment Variables**: Add an environment variable specifying your live API backend service url:
+### Service 2: Stateless MCP Server (`rook-notes-mcp`)
+The MCP server provides tool interfaces for AI agents and queries the API backend downstream.
+
+1. Click **Create Service** in the Cloud Run console.
+2. Select **Deploy revision from a source repository** and configure Cloud Build.
+3. Select the `rook-notes` repository, set the branch to `main`.
+4. Under **Build Type**, select **Dockerfile**. Set the path to `Dockerfile.mcp` and click **Save**.
+5. Name the service: `rook-notes-mcp`.
+6. Select **Request-based** CPU allocation and **Allow unauthenticated invocations**.
+7. Under **Container** settings:
+   - Set **Container Port** to `3002`.
+   - Set **Minimum instances** to `0` and **Maximum instances** to `5`.
+   - **Environment Variables**: Map the server to your live Express API URL:
+     - **Name**: `API_BASE_URL`
+     - **Value**: `https://rook-notes-api-xxxxxx.a.run.app` (The URL copied from Service 1)
+8. Click **Create** to launch the service.
+
+### Service 3: Frontend Client (`rook-notes-frontend`)
+The web client serves compiled React assets via Nginx and proxies `/api` calls downstream.
+
+1. Click **Create Service** in the Cloud Run console.
+2. Configure Cloud Build for the `rook-notes` repository on the `main` branch.
+3. Under **Build Type**, select **Dockerfile**. Set the path to `Dockerfile.app` (the renamed root Dockerfile) and click **Save**.
+4. Name the service: `rook-notes-frontend`.
+5. Select **Request-based** CPU allocation and **Allow unauthenticated invocations**.
+6. Under **Container** settings:
+   - Set **Container Port** to `80`.
+   - Set **Minimum instances** to `0` and **Maximum instances** to `5`.
+   - **Environment Variables**: Point Nginx to your backend API:
      - **Name**: `API_URL`
-     - **Value**: The full HTTP/HTTPS URL of your active API backend (e.g., `https://api.rook-notes.example.com`).
-4. Under *Authentication*, select **Allow unauthenticated invocations** to make the React SPA publicly accessible.
-5. Click **Create** to launch the build and deployment process.
+     - **Value**: `https://rook-notes-api-xxxxxx.a.run.app` (The URL copied from Service 1)
+7. Click **Create** to launch the service. Once built, access the live React web client via the generated frontend HTTPS URL!
 
 ---
 
 ## 5. Live Production Verification
 
-Once Cloud Run finishes building and deploying the container, verify its operations:
+Once all three services have successfully deployed, perform the following validation steps:
 
-1. **Frontpage Verification**:
-   - Access the generated live HTTPS URL (e.g., `https://rook-notes-frontend-xxxxxx.a.run.app`) in a web browser.
-   - Verify that the page loads instantly and all assets (fonts, icons, stylesheets) are served correctly.
-2. **API Communication Validation**:
-   - Open your browser's Developer Tools (`F12` -> Network tab).
-   - Perform a data action (e.g., listing, creating, or editing a note).
-   - Ensure requests sent to `/api/*` succeed with `200 OK` (or appropriate status codes) and are correctly forwarded and resolved by the downstream backend API.
-
----
-
-## 6. Live Google Cloud Run Verification (User Step)
-
-1. Follow the step-by-step console instructions in `DEPLOYMENT.md` to connect the GitHub repository and deploy the service on Google Cloud Run.
-2. Navigate to the generated live HTTPS URL in your web browser and confirm the React SPA loads correctly.
-3. Verify that network requests to the `/api` route succeed and interact correctly with the backend API.
+1. **Frontend Loading**:
+   - Access the live frontend URL (e.g., `https://rook-notes-frontend-xxxxxx.a.run.app`).
+   - Confirm that the UI renders instantly and static assets compile beautifully.
+2. **Note Operations (React-API Sync)**:
+   - Create a note, update its title, and add some tags.
+   - Using your browser Developer Tools (`F12` -> Network tab), verify that CRUD requests sent to `/api/notes` resolve instantly through the Nginx proxy to the live `rook-notes-api` backend service.
+3. **SSE Real-Time Broadcasts**:
+   - Verify that updates appear instantly without page refreshes, confirming that Nginx handles Server-Sent Events (SSE) stream routing successfully without buffer locks.
+4. **Agentic MCP Tool Verification**:
+   - Query the live MCP server at `/mcp` using a standard Model Context Protocol client (like Claude Code) mapped to `https://rook-notes-mcp-xxxxxx.a.run.app/mcp`.
+   - Verify that the agent can successfully query, list, and edit database notes.
 
 ---
 
-## 7. Operational Gotchas
+## 6. Operational Gotchas
 
-- **In-Memory State Reset**: Google Cloud Run services automatically scale down to zero instances when idle. When a new instance is spun up to handle an incoming request, any in-memory state or session caches (if not backed by a database like Redis/Postgres) will be completely reset. Ensure all critical note data is synchronized with the persistent backend API database.
-- **Headless PNPM parameters**: The production build uses `--frozen-lockfile` to guarantee package parity. If you update `package.json` dependencies, always make sure to run `pnpm install` locally to update `pnpm-lock.yaml` and commit the lockfile to your branch before pushing to production.
+### Ephemeral Storage and scale-to-zero State Loss
 
+> [!WARNING]
+> **IMPORTANT OPERATIONAL CHARACTERISTIC:**
+> Since this project acts as a prototype sandbox, it is configured in **Ephemeral Mode** (stateless local container filesystem). 
+>
+> Google Cloud Run automatically scales containers down to **zero instances** when they are idle for a prolonged period of time (to conserve costs and CPU). Because Cloud Run containers are stateless, **any notes created or modified on the live service will be completely reset and wiped** whenever the container scales to zero.
+>
+> This behavior is fully accepted for this experimental stage. Avoid using the live playground deployment to store long-term or critical notes.

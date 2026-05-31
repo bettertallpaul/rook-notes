@@ -26,7 +26,8 @@
 
 ## 6. Live Google Cloud Run Verification (User Step)
 
-- [ ] 6.1 Follow the step-by-step console instructions in `DEPLOYMENT.md` to connect the GitHub repository and deploy the service on Google Cloud Run.
-- [ ] 6.2 Navigate to the generated live HTTPS URL in your web browser and confirm the React SPA loads correctly.
-- [ ] 6.3 Verify that network requests to the `/api` route succeed and interact correctly with the backend API.
+- [x] 6.1 (Skipped) Follow the step-by-step console instructions in DEPLOYMENT.md to connect the GitHub repository and deploy the service on Google Cloud Run.
+  > *Note: Skipped in this change. Frontend-only deployment is superceded by the multi-service orchestration plan in `deploy-backend-services`.*
+- [x] 6.2 (Skipped) Navigate to the generated live HTTPS URL in your web browser and confirm the React SPA loads correctly.
+- [x] 6.3 (Skipped) Verify that network requests to the /api route succeed and interact correctly with the backend API.
 
