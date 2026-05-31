@@ -90,7 +90,7 @@ const generator = new OpenApiGeneratorV3(registry.definitions)
 const openApiSpec = generator.generateDocument({
   openapi: '3.0.0',
   info: { title: 'Rook Notes API', version: '1.0.0', description: 'HTTP API for the Rook note-taking app' },
-  servers: [{ url: 'http://localhost:3001' }],
+  servers: [{ url: '/' }],
 })
 
 // --- SSE for live updates ---
