@@ -78,6 +78,7 @@ If you want to manually run and debug services in parallel locally:
 ---
 
 ## 3. Preparing the Production Branch
+<!-- TODO: my process no longer involves dev/main, but rather new branches created for various features/fixes/etc that get merged back into main and deleted once they have served their purpose. Need to update this section accordingly. -->
 
 Because active development takes place on the `dev` branch, your newly created production configurations currently only exist on `dev`. Google Cloud Run triggers are designed to build from your production branch (`main`). Therefore, you must push your `dev` changes to GitHub and merge them into `main` **before** connecting the services in the Google Cloud Console.
 
