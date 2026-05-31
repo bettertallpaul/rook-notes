@@ -1,4 +1,4 @@
-.PHONY: help up shell install dev build test down purge seed fresh design-lint design-diff design-export design-spec prod-build prod-run prod-test prod-clean prod-verify
+.PHONY: help up shell install dev build test down purge seed fresh design-lint design-diff design-export design-spec prod-build prod-run prod-clean prod-verify prod-api-build prod-mcp-build prod-api-run prod-mcp-run prod-backend-clean prod-backend-verify prod-app-build prod-app-run prod-app-test prod-app-clean prod-app-verify
 
 .DEFAULT_GOAL := help
 
@@ -86,25 +86,88 @@ design-spec: ## Output the DESIGN.md format specification
 # --- PRODUCTION VERIFICATION ---
 # ==========================================
 
-prod-build: ## Build the production Docker image
-	docker build -t rook-notes:prod -f Dockerfile .
+# --- Individual Service Builds ---
+prod-app-build: ## Build the production Frontend Docker image
+	docker build -t rook-notes:prod -f Dockerfile.app .
 
-prod-run: ## Run the production container locally in the background
+prod-api-build: ## Build the production API Docker image
+	docker build -t rook-notes-api:prod -f Dockerfile.api .
+
+prod-mcp-build: ## Build the production MCP Docker image
+	docker build -t rook-notes-mcp:prod -f Dockerfile.mcp .
+
+prod-build: prod-app-build prod-api-build prod-mcp-build ## Build all production Docker images (Frontend, API, MCP)
+
+prod-port-check: ## Check if development containers are occupying production ports
+	@if docker ps --format '{{.Names}}' | grep -E "rook-notes-(app|api|mcp)-1" >/dev/null 2>&1; then \
+		printf "\n\033[1;31mError: Your local development environment is still running!\033[0m\n"; \
+		printf "Active dev containers are currently occupying ports 3001/3002.\n"; \
+		printf "Please stand them down first by running:\n"; \
+		printf "  \033[1;36mmake down\033[0m\n\n"; \
+		exit 1; \
+	fi
+
+# --- Individual Service Lifecycle ---
+prod-app-run: prod-port-check ## Run the production Frontend container locally in the background
 	docker run -d --name rook-notes-prod -p 8080:8080 -e PORT=8080 -e API_URL=http://host.docker.internal:3001 --add-host=host.docker.internal:host-gateway rook-notes:prod
-	@printf "\nProduction server started at http://localhost:8080\n"
+	@printf "\nProduction Frontend started at http://localhost:8080\n"
 
-prod-test: ## Test the production container endpoint
-	@printf "\nTesting production container endpoint...\n"
-	@curl -f http://localhost:8080/ || (echo "Failed to contact production container!" && exit 1)
-	@printf "Production container test passed!\n"
+prod-api-run: prod-port-check ## Run the production API container locally in the background
+	docker run -d --name rook-notes-api-prod -p 3001:3001 -e PORT=3001 --env-file .env -v $(shell pwd)/data:/app/data rook-notes-api:prod
 
-prod-clean: ## Stop and remove the production container
+prod-mcp-run: prod-port-check ## Run the production MCP container locally in the background
+	docker run -d --name rook-notes-mcp-prod -p 3002:3002 -e PORT=3002 -e API_BASE_URL=http://host.docker.internal:3001 --add-host=host.docker.internal:host-gateway rook-notes-mcp:prod
+
+prod-run: prod-api-run prod-mcp-run prod-app-run ## Run all production containers locally in the background
+
+# --- Individual Service Cleans ---
+prod-app-clean: ## Stop and remove the production Frontend container
 	-docker stop rook-notes-prod
 	-docker rm rook-notes-prod
 
-prod-verify: prod-clean prod-build prod-run ## Run the full build-run-test production verification pipeline
-	@printf "\nWaiting for production server to be ready...\n"
+prod-backend-clean: ## Stop and remove production backend containers (API, MCP)
+	-docker stop rook-notes-api-prod rook-notes-mcp-prod
+	-docker rm rook-notes-api-prod rook-notes-mcp-prod
+
+prod-clean: prod-app-clean prod-backend-clean ## Stop and remove all production containers
+
+# --- Individual Service Tests & Verification ---
+prod-app-test: ## Test the production Frontend container endpoint
+	@printf "\nTesting production Frontend container endpoint...\n"
+	@curl -f http://localhost:8080/ || (echo "Failed to contact production Frontend container!" && exit 1)
+	@printf "Production Frontend container test passed!\n"
+
+prod-app-verify: prod-app-clean prod-app-build prod-app-run ## Run the Frontend build-run-test production verification pipeline
+	@printf "\nWaiting for production Frontend server to be ready...\n"
 	@sleep 2
-	@$(MAKE) prod-test
+	@$(MAKE) prod-app-test
+	@$(MAKE) prod-app-clean
+	@printf "\nProduction Frontend verification completed successfully!\n"
+
+prod-backend-verify: prod-backend-clean prod-api-build prod-mcp-build prod-api-run prod-mcp-run ## Build, run, and verify the production backend containers
+	@printf "\nWaiting for production backend services to start...\n"
+	@sleep 3
+	@printf "\nTesting API container endpoint...\n"
+	@curl -f http://localhost:3001/api/notes || (echo "Failed to contact production API container!" && $(MAKE) prod-backend-clean && exit 1)
+	@printf "API container test passed!\n"
+	@printf "\nTesting MCP container endpoint...\n"
+	@curl -s http://localhost:3002/mcp | grep "Method not allowed" > /dev/null || (echo "Failed to contact production MCP container!" && $(MAKE) prod-backend-clean && exit 1)
+	@printf "MCP container test passed!\n"
+	@$(MAKE) prod-backend-clean
+	@printf "\nProduction backend verification completed successfully!\n"
+
+# --- Orchestrated Full Pipeline Verification ---
+prod-verify: prod-clean prod-build prod-run ## Run the full build-run-test production verification pipeline for all services
+	@printf "\nWaiting for all production services to start...\n"
+	@sleep 3
+	@printf "\nTesting production Frontend container endpoint...\n"
+	@curl -f http://localhost:8080/ || (echo "Failed to contact production Frontend container!" && $(MAKE) prod-clean && exit 1)
+	@printf "Frontend container test passed!\n"
+	@printf "\nTesting production API container endpoint...\n"
+	@curl -f http://localhost:3001/api/notes || (echo "Failed to contact production API container!" && $(MAKE) prod-clean && exit 1)
+	@printf "API container test passed!\n"
+	@printf "\nTesting production MCP container endpoint...\n"
+	@curl -s http://localhost:3002/mcp | grep "Method not allowed" > /dev/null || (echo "Failed to contact production MCP container!" && $(MAKE) prod-clean && exit 1)
+	@printf "MCP container test passed!\n"
 	@$(MAKE) prod-clean
-	@printf "\nProduction verification pipeline completed successfully!\n"
+	@printf "\nFull multi-service production verification pipeline completed successfully!\n"

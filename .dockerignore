@@ -4,3 +4,12 @@ npm-debug.log
 .DS_Store
 dist
 data
+.agent
+.claude
+openspec
+plans
+.env
+.env.*
+*.local
+postman
+scripts

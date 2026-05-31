@@ -33,8 +33,11 @@ This section provides a high-level overview of the project's directory and file 
 ├── postman/              # Postman API test collections
 ├── assetts/              # Static assets (images, icons)
 ├── Dockerfile.dev        # Docker configuration for development
+├── Dockerfile.app        # Production Dockerfile for Frontend (Nginx Alpine)
+├── Dockerfile.api        # Production Dockerfile for Express API backend
+├── Dockerfile.mcp        # Production Dockerfile for stateless MCP server
 ├── docker-compose.yml    # Orchestrates app, api, and mcp services
-├── Makefile              # Task runner for development commands
+├── Makefile              # Task runner for development and production commands
 ├── README.md             # Project overview
 ├── DESIGN.md             # Design system and brand guide
 └── ARCHITECTURE.md       # This document
@@ -78,7 +81,7 @@ flowchart TD
 - **Description:** Minimalist, markdown-based note-taking user interface. Manages client-side state with optimistic updates, using incoming SSE events as an invalidation signal to trigger fresh data fetches.
 - **Technologies:** React 18, Zustand (state management), TipTap (markdown editor), Tailwind CSS 4, Vite, Sonner (notifications).
 - **Styling/UX:** For details on the design system, typography, and color palette, refer directly to [DESIGN.md](DESIGN.md).
-- **Deployment:** Served via Vite inside the `app` Docker container.
+- **Deployment:** Served via Vite inside the `app` Docker container in development; served via Nginx in `Dockerfile.app` on Google Cloud Run in production.
 
 ### 3.2. Backend Services
 
@@ -87,14 +90,14 @@ flowchart TD
 - **Name:** `api` service
 - **Description:** The core backend providing REST routes, enforcing Zod validation, publishing real-time updates via Server-Sent Events (SSE), and hosting Scalar documentation. Also encapsulates the internal **AI Taxonomy Service** logic for generating tag suggestions.
 - **Technologies:** Node 24, Express 5, Zod, Vercel AI SDK (Google Gemini & Anthropic integration), OpenAPI (`zod-to-openapi`), Scalar docs UI.
-- **Deployment:** Runs in the `api` Docker container on port 3001.
+- **Deployment:** Runs in the `api` Docker container on port 3001 in development; deployed as a standalone container via `Dockerfile.api` on Google Cloud Run in production.
 
 #### 3.2.2. MCP Server
 
 - **Name:** `mcp` service
 - **Description:** A stateless Model Context Protocol server that exposes intent-based tools (`search_notes`, `create_note`, etc.) for agents like Claude Code. Acts as a consumer of the Express API.
 - **Technologies:** `@modelcontextprotocol/sdk`, Streamable HTTP transport, tsx watch.
-- **Deployment:** Runs in the `mcp` Docker container on port 3002.
+- **Deployment:** Runs in the `mcp` Docker container on port 3002 in development; deployed as a standalone container via `Dockerfile.mcp` on Google Cloud Run in production.
 
 ## 4. Data Stores
 
@@ -104,7 +107,7 @@ flowchart TD
 - **Type:** File-based JSON store
 - **Purpose:** Persists all note content, metadata, and labels locally.
 - **Key Schemas/Collections:** Governed by Zod schemas in `src/shared/schemas.ts` (`NoteSchema`).
-- **Persistence:** Persisted using a named Docker volume `notes_data` mounted at `/app/data`.
+- **Persistence:** Persisted using a named Docker volume `notes_data` mounted at `/app/data` in development. In production on Google Cloud Run, it adopts an **Ephemeral Mode** where note data is stored locally in the container's scratch volume (defaulting to `./data`) and resets whenever the Cloud Run instance scales to zero (idle scaling).
 - **Concurrency Constraint:** Relies on local filesystem interaction with a single JSON file; not designed for heavy concurrent write operations. Optimized for low-latency single-user access.
 
 ## 5. External Integrations / APIs
@@ -114,10 +117,14 @@ flowchart TD
 
 ## 6. Deployment & Infrastructure
 
-- **Containerization:** Orchestrated via `docker-compose.yml` running three services (`app`, `api`, `mcp`).
+- **Containerization:** Orchestrated via `docker-compose.yml` running three services (`app`, `api`, `mcp`) in development.
+- **Production Containers:** Deployed as three standalone services on Google Cloud Run:
+  - **Frontend client (`Dockerfile.app`)**: Pre-compiled React served via Nginx Alpine, proxying `/api` traffic downstream using dynamic environment interpolation.
+  - **Express API backend (`Dockerfile.api`)**: Node.js container executing the backend Express API without file watcher overhead.
+  - **Stateless MCP server (`Dockerfile.mcp`)**: Node.js container executing the streamable HTTP MCP server, pointing to the live API via `API_BASE_URL`.
 - **Runtime Environment:** Node 24 (Bookworm) slim base images.
-- **Volumes:** Uses named volumes for `node_modules` and application data (`notes_data`) along with source bind-mounts for real-time reload capability.
-- **Task Runner:** Managed via standard `Makefile` commands (`make up`, `make down`, `make fresh`).
+- **Volumes:** Uses named volumes for `node_modules` and application data (`notes_data`) along with source bind-mounts for real-time reload capability in development.
+- **Task Runner:** Managed via standard `Makefile` commands (`make up`, `make down`, `make fresh` for dev; `make prod-verify`, `make prod-app-verify`, and `make prod-backend-verify` for production local checks).
 
 ## 7. Security Considerations
 
@@ -130,26 +137,14 @@ flowchart TD
 - **Evaluation Framework:** Utilizes **Promptfoo** for LLM evals, benchmarking, and prompt iteration located in `tests/promptfoo/`.
 - **Hot Reloading:** Utilizes `tsx watch` for API/MCP reloading and Vite’s HMR for frontend development.
 
-## 9. Future Considerations / Roadmap
-
-Based on the existing milestones located in the `/plans/` directory, current and future focus areas include:
-
-- [x] **01-core-application:** Initial structure and basic functionality.
-- [x] **02-mcp-server:** Agentic tool integration.
-- [ ] **03-ai-milestones:** Staged rollout of intelligent capabilities.
-    - [x] **m1-ai-suggest-tags:** 
-    - [ ] **m2-ai-chat-with-vault:** 
-    - [ ] **m3-ai-deduplication:** 
-- [x] **04-error-handling-toast:** Refining user feedback loop for transient backend/AI errors.
-
-## 10. Project Identification
+## 9. Project Identification
 
 - **Project Name:** Rook Notes
 - **Description:** A fast, minimal, markdown-based note-taking playground for exploring AI-assisted development and tooling.
 - **Repository Style:** Docker-first development workflow.
 - **Date of Last Update:** 2026-05-10
 
-## 11. Glossary / Acronyms
+## 10. Glossary / Acronyms
 
 - **MCP:** Model Context Protocol
 - **SSE:** Server-Sent Events

@@ -165,7 +165,7 @@ app.delete('/mcp', (_req, res) => {
   res.status(405).json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed' }, id: null })
 })
 
-const PORT = parseInt(process.env.MCP_PORT ?? '3002', 10)
+const PORT = parseInt(process.env.PORT ?? process.env.MCP_PORT ?? '3002', 10)
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Rook MCP server listening on :${PORT}/mcp`)
 })
