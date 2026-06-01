@@ -1,0 +1,37 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: rook-notes-api
+  labels:
+    cloud.googleapis.com/location: GCP_REGION_PLACEHOLDER
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/client-name: gcloud
+        deploy-timestamp: "DEPLOY_TIMESTAMP_PLACEHOLDER"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+      - image: REGISTRY_PLACEHOLDER/api:latest
+        ports:
+        - containerPort: 3001
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "512Mi"
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3001"
+        - name: TAXONOMY_MODEL
+          value: "gemini-2.5-flash-lite"
+        - name: AI_ENABLED
+          value: "true"
+        - name: GOOGLE_GENERATIVE_AI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: GOOGLE_GENERATIVE_AI_API_KEY
+              key: "latest"

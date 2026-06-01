@@ -19,6 +19,7 @@ This section provides a high-level overview of the project's directory and file 
 │   │   ├── index.html
 │   │   ├── vite.config.ts
 │   │   ├── package.json
+│   │   ├── service.template.yaml # Knative service template config
 │   │   └── Dockerfile    # Production Frontend container (Nginx Alpine)
 │   ├── api/              # @rook/api - Express API backend
 │   │   ├── src/
@@ -28,12 +29,14 @@ This section provides a high-level overview of the project's directory and file 
 │   │   │   └── ai/       # AI integration logic (Vercel AI SDK)
 │   │   ├── package.json
 │   │   ├── tsup.config.ts# Fast tsup single-file ESM bundler config
+│   │   ├── service.template.yaml # Knative service template config
 │   │   └── Dockerfile    # Symmetrical, single-stage production API container
 │   └── mcp/              # @rook/mcp - Model Context Protocol server
 │       ├── src/
 │       │   └── index.ts  # Stateless MCP server implementation
 │       ├── package.json
 │       ├── tsup.config.ts# Fast tsup single-file ESM bundler config
+│       ├── service.template.yaml # Knative service template config
 │       └── Dockerfile    # Symmetrical, single-stage production MCP container
 ├── data/                 # Persistent storage directory (notes.json)
 ├── openspec/             # OpenSpec directory for baseline specifications and changes
@@ -129,9 +132,15 @@ flowchart TD
   - **Frontend client (`services/frontend/Dockerfile`)**: Pre-compiled React served via Nginx Alpine, proxying `/api` traffic downstream using dynamic environment interpolation.
   - **Express API backend (`services/api/Dockerfile`)**: Node.js container executing pre-compiled ESM vanilla JavaScript on raw node runtime engine without run-time compiler overhead.
   - **Stateless MCP server (`services/mcp/Dockerfile`)**: Node.js container executing pre-compiled ESM vanilla JavaScript on raw node runtime engine, pointing to the live API via `API_BASE_URL`.
+- **Local-Packaging-Remote-Deploy Pipeline (Pure Local Container Delivery):** 
+  To eliminate GitHub-triggered Cloud Build lag and repository/PR bloat from committing build artifacts (`dist/` directories) to source control:
+  1. **Local Compilation & Packaging**: The source code is compiled locally inside the developer context. Symmetrical, root-relative Dockerfiles build production images on the local engine.
+  2. **Direct Push**: Finished images are pushed directly to Google Artifact Registry.
+  3. **Declarative Manifest Interpolation**: The parameterised `service.template.yaml` files inside each service are dynamically compiled via `make` into untracked, environment-specific `service.yaml` files (e.g., replacing region, registry, dynamic timestamps to bypass Cloud Run revision caching, and the live downstream API URL).
+  4. **Instant Cloud Run Rollout**: The generated specs are applied to Cloud Run via `gcloud run services replace`, enabling rapid, terminal-driven, zero-downtime updates in seconds.
 - **Runtime Environment:** Node 24 (Bookworm) slim base images.
 - **Volumes:** Uses named volumes for `node_modules` and application data (`notes_data`) along with source bind-mounts for real-time reload capability in development.
-- **Task Runner:** Managed via standard `Makefile` commands (`make up`, `make down`, `make fresh` for dev; `make prod-verify`, `make prod-app-verify`, and `make prod-backend-verify` for production local checks).
+- **Task Runner:** Managed via standard `Makefile` commands (`make up`, `make down`, `make fresh` for dev; `make prod-verify`, `make prod-app-verify`, and `make prod-backend-verify` for production local checks, plus `make prod-release-all` for the remote pipeline).
 
 ## 7. Security Considerations
 

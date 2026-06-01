@@ -25,3 +25,6 @@ data/
 .vscode/
 *.swp
 *.swo
+
+# Generated Knative service configs
+services/*/service.yaml

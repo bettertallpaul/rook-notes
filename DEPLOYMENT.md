@@ -77,95 +77,49 @@ If you want to manually run and debug services in parallel locally:
 
 ---
 
-## 3. Production Release Workflow
+## 3. Declarative Production Release (CLI-First)
 
-Active development is performed in dedicated, short-lived feature or fix branches. Google Cloud Run triggers are configured to build and deploy from the production branch (`main`). 
+Unlike traditional manual browser configurations or complex GitHub-triggered Cloud Build setups, this project uses a deterministic, **terminal-driven local container packaging and declarative deployment** pipeline.
 
-To release new configurations or updates to production, you push your work branch and merge it into `main` using a standard Pull Request (PR) workflow on GitHub.
+Container properties, limits, and environmental parameters are defined inside version-controlled Knative templates (`service.template.yaml`). At deploy time, these templates are dynamically compiled via `make` into untracked `service.yaml` manifests and applied directly to Google Cloud Run.
 
-### Step-by-Step Release Process:
-
-1. **Commit your changes locally** on your active work branch:
-   ```bash
-   git add .
-   git commit -m "feat: implement multi-service production container setup"
-   ```
-
-2. **Push your branch to GitHub**:
-   ```bash
-   git push origin <your-branch-name>
-   ```
-
-3. **Create and Merge a Pull Request (PR)**:
-   - Navigate to your repository on GitHub and open a Pull Request from `<your-branch-name>` into `main`.
-   - Review changes, and merge the PR into `main`.
-   - Delete the short-lived feature branch on GitHub once it has served its purpose.
-
-4. **Automatic Cloud Deployment**:
-   - Merging into `main` automatically triggers Google Cloud Build to pull the new changes, rebuild the respective Dockerfiles, and roll out zero-downtime updates to your active Cloud Run services!
+### A. Pre-requisites & Active GCP Project check
+Before deploying, make sure you are authenticated with `gcloud` and have set the correct project:
+```bash
+gcloud auth login
+gcloud config set project rook-notes-prod
+```
+The release targets automatically execute `gcp-auth-check` as a pre-flight validator to ensure you are deploying to the intended project.
 
 ---
 
-## 4. Step-by-Step Google Cloud Run Console Setup
+## 4. Release Workflows
 
-To deploy the entire rook-notes suite, you will configure and deploy **three separate Cloud Run services** sequentially.
+You can release code to Google Cloud Run using two primary workflows depending on whether you are releasing an official production update or deploying a dynamic sandbox/staging environment.
 
-> [!TIP]
-> **Perpetual Free Tier Guidelines:**
-> - **CPU Allocation**: Select **Request-based** (CPU is only allocated during request processing) so you are not charged when services are idle.
-> - **Scaling**: Set **Minimum instances** to `0` (essential for scale-to-zero).
-> - **Resources**: Set memory to `512 MiB` and CPU to `1 vCPU` under the Container tab (more than enough for these lightweight services).
+### Path A: Standard Production Release (from `main`)
+This workflow is used to roll out verified, stable updates from the `main` branch to the production services (`rook-notes-api`, `rook-notes-mcp`, and `rook-notes-frontend`).
 
-### Service 1: Express API Service (`rook-notes-api`)
-The API service acts as the heart of the system and must be deployed first so other services can reference its live URL.
+1. **Verify your local branch is up to date**:
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
 
-1. Navigate to the **Cloud Run** console page and click **Create Service**.
-2. Select **Deploy revision from a source repository** and click **Set up with Cloud Build**.
-3. Select the `rook-notes` repository and click **Next**.
-4. Set the build trigger branch to `main`.
-5. Under **Build Type**, select **Dockerfile**. Set the path to `services/api/Dockerfile` and click **Save**.
-6. Name the service: `rook-notes-api` and choose a Tier 1 region close to you.
-7. Select **Request-based** CPU allocation and **Allow unauthenticated invocations**.
-8. Scroll down to **Container, Networking, Security** -> **Container tab**:
-   - Set **Container Port** to `3001` (Cloud Run dynamically forwards incoming traffic here).
-   - Set **Minimum instances** to `0` and **Maximum instances** to `5`.
-   - **Environment Variables**: Add your secure AI API key:
-     - **Name**: `GOOGLE_GENERATIVE_AI_API_KEY`
-     - **Value**: `[Your actual Google AI API Key]`
-9. Click **Create** to launch the deployment. Once complete, copy the generated HTTPS URL (e.g., `https://rook-notes-api-xxxxxx.a.run.app`).
+2. **Deploy all services in order**:
+   ```bash
+   make prod-release-all
+   ```
+   This unified target compiles the monorepo workspace code, builds the production-ready containers locally using root-relative contexts, pushes the layers to Google Artifact Registry, and replaces the live Cloud Run services sequentially (API first, followed by MCP and Frontend to dynamically inject the active API URL downstream).
 
-### Service 2: Stateless MCP Server (`rook-notes-mcp`)
-The MCP server provides tool interfaces for AI agents and queries the API backend downstream.
+### Path B: Instant Staging/Sandbox Deployment (from Feature Branches)
+Because the deployment flow is entirely declarative and parameterized, you can spin up isolated staging, sandbox, or UAT environments UAT directly from feature branches without affecting the live production application.
 
-1. Click **Create Service** in the Cloud Run console.
-2. Select **Deploy revision from a source repository** and configure Cloud Build.
-3. Select the `rook-notes` repository, set the branch to `main`.
-4. Under **Build Type**, select **Dockerfile**. Set the path to `services/mcp/Dockerfile` and click **Save**.
-5. Name the service: `rook-notes-mcp`.
-6. Select **Request-based** CPU allocation and **Allow unauthenticated invocations**.
-7. Under **Container** settings:
-   - Set **Container Port** to `3002`.
-   - Set **Minimum instances** to `0` and **Maximum instances** to `5`.
-   - **Environment Variables**: Map the server to your live Express API URL:
-     - **Name**: `API_BASE_URL`
-     - **Value**: `https://rook-notes-api-xxxxxx.a.run.app` (The URL copied from Service 1)
-8. Click **Create** to launch the service.
-
-### Service 3: Frontend Client (`rook-notes-frontend`)
-The web client serves compiled React assets via Nginx and proxies `/api` calls downstream.
-
-1. Click **Create Service** in the Cloud Run console.
-2. Configure Cloud Build for the `rook-notes` repository on the `main` branch.
-3. Under **Build Type**, select **Dockerfile**. Set the path to `services/frontend/Dockerfile` and click **Save**.
-4. Name the service: `rook-notes-frontend`.
-5. Select **Request-based** CPU allocation and **Allow unauthenticated invocations**.
-6. Under **Container** settings:
-   - Set **Container Port** to `80`.
-   - Set **Minimum instances** to `0` and **Maximum instances** to `5`.
-   - **Environment Variables**: Point Nginx to your backend API:
-     - **Name**: `API_URL`
-     - **Value**: `https://rook-notes-api-xxxxxx.a.run.app` (The URL copied from Service 1)
-7. Click **Create** to launch the service. Once built, access the live React web client via the generated frontend HTTPS URL!
+To deploy a custom staging instance, override the GCP configuration variables on the command line:
+```bash
+make prod-release-all GCP_PROJECT=rook-notes-staging GCP_REGION=us-east1
+```
+This command compiles the feature code, pushes the resulting container layers to a separate Artifact Registry under the `rook-notes-staging` project, and rolls out staging services isolated in the specified location.
 
 ---
 
@@ -174,7 +128,7 @@ The web client serves compiled React assets via Nginx and proxies `/api` calls d
 Once all three services have successfully deployed, perform the following validation steps:
 
 1. **Frontend Loading**:
-   - Access the live frontend URL (e.g., `https://rook-notes-frontend-xxxxxx.a.run.app`).
+   - Access the live frontend URL (available in the Cloud Run Console or via `gcloud run services describe rook-notes-frontend`).
    - Confirm that the UI renders instantly and static assets compile beautifully.
 2. **Note Operations (React-API Sync)**:
    - Create a note, update its title, and add some tags.
@@ -182,7 +136,7 @@ Once all three services have successfully deployed, perform the following valida
 3. **SSE Real-Time Broadcasts**:
    - Verify that updates appear instantly without page refreshes, confirming that Nginx handles Server-Sent Events (SSE) stream routing successfully without buffer locks.
 4. **Agentic MCP Tool Verification**:
-   - Query the live MCP server at `/mcp` using a standard Model Context Protocol client (like Claude Code) mapped to `https://rook-notes-mcp-xxxxxx.a.run.app/mcp`.
+   - Query the live MCP server at `/mcp` using a standard Model Context Protocol client (like Claude Code) mapped to your live `rook-notes-mcp` service url.
    - Verify that the agent can successfully query, list, and edit database notes.
 
 ---

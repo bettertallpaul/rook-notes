@@ -16,3 +16,8 @@ scripts
 
 # Allow compiled production artifacts to be copied during docker builds
 !services/*/dist/
+
+# Ignore raw source code since we only deploy compiled dist/ bundles
+services/frontend/src
+services/api/src
+services/mcp/src

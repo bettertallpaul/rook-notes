@@ -6,6 +6,7 @@
 ## Next
 - [ ] **Include noindex instructions** to prevent live instances from being indexed by search engines.
 - [ ] **Refactor build process for simplicity and speed:** As highlighted in `session_summary.md`, includes repo reorganization, and hybrid local-build/GCP-deploy pipeline.
+- [ ] **Extend `make prod-verify` with dynamic feature assertions:** Go beyond basic infrastructure smoke checks (port accessibility) by implementing lightweight integration tests that assert actual note CRUD operations and basic MCP tool functionality against the running production container suite before teardown.
 
 ## Later
 - [ ] **Fix `make test` execution:** Add a `"test"` script to `package.json` so that the `make test` command successfully executes tests inside the container instead of failing with a missing script error.
