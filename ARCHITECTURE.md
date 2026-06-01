@@ -140,7 +140,7 @@ flowchart TD
   4. **Instant Cloud Run Rollout**: The generated specs are applied to Cloud Run via `gcloud run services replace`, enabling rapid, terminal-driven, zero-downtime updates in seconds.
 - **Runtime Environment:** Node 24 (Bookworm) slim base images.
 - **Volumes:** Uses named volumes for `node_modules` and application data (`notes_data`) along with source bind-mounts for real-time reload capability in development.
-- **Task Runner:** Managed via standard `Makefile` commands (`make up`, `make down`, `make fresh` for dev; `make prod-verify`, `make prod-app-verify`, and `make prod-backend-verify` for production local checks, plus `make prod-release-all` for the remote pipeline).
+- **Task Runner:** Managed via standard `Makefile` commands (`make up`, `make down`, `make fresh` for dev; `make prod-verify`, `make prod-app-verify`, and `make prod-backend-verify` for production local checks, plus `make prod-release-all` and `make prod-urls` for the remote pipeline).
 
 ## 7. Security Considerations
 

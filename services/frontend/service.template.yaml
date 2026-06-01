@@ -10,6 +10,7 @@ spec:
       annotations:
         run.googleapis.com/client-name: gcloud
         deploy-timestamp: "DEPLOY_TIMESTAMP_PLACEHOLDER"
+        autoscaling.knative.dev/maxScale: "5"
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -22,8 +23,6 @@ spec:
             cpu: "1000m"
             memory: "512Mi"
         env:
-        - name: PORT
-          value: "80"
         - name: API_URL
           value: "API_URL_PLACEHOLDER"
         - name: NGINX_ENVSUBST_FILTER

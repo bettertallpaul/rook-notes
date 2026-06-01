@@ -1,4 +1,4 @@
-.PHONY: help up shell install dev build test down purge seed fresh design-lint design-diff design-export design-spec prod-build prod-run prod-clean prod-verify prod-api-build prod-mcp-build prod-api-run prod-mcp-run prod-backend-clean prod-backend-verify prod-app-build prod-app-run prod-app-test prod-app-clean prod-app-verify gcp-auth-check prod-release-api prod-release-mcp prod-release-frontend prod-release-all
+.PHONY: help up shell install dev build test down purge seed fresh design-lint design-diff design-export design-spec prod-build prod-run prod-clean prod-verify prod-api-build prod-mcp-build prod-api-run prod-mcp-run prod-backend-clean prod-backend-verify prod-app-build prod-app-run prod-app-test prod-app-clean prod-app-verify gcp-auth-check prod-release-api prod-release-mcp prod-release-frontend prod-release-all prod-urls
 
 .DEFAULT_GOAL := help
 
@@ -193,7 +193,7 @@ gcp-auth-check: ## Verify that gcloud is authenticated and project is set correc
 
 prod-release-api: gcp-auth-check build ## Build, push and deploy production API service
 	@printf "\nBuilding production API container...\n"
-	docker build -t $(REGISTRY)/api:latest -f services/api/Dockerfile .
+	docker build --platform linux/amd64 -t $(REGISTRY)/api:latest -f services/api/Dockerfile .
 	@printf "Pushing API image to Artifact Registry...\n"
 	docker push $(REGISTRY)/api:latest
 	@printf "Compiling declarative service definition...\n"
@@ -203,6 +203,8 @@ prod-release-api: gcp-auth-check build ## Build, push and deploy production API 
 	    services/api/service.template.yaml > services/api/service.yaml
 	@printf "Deploying API service to Cloud Run...\n"
 	gcloud run services replace services/api/service.yaml --platform managed --region $(GCP_REGION)
+	@printf "Enabling public unauthenticated access...\n"
+	gcloud run services add-iam-policy-binding rook-notes-api --member="allUsers" --role="roles/run.invoker" --platform managed --region $(GCP_REGION) --quiet
 
 prod-release-mcp: gcp-auth-check build ## Build, push and deploy production MCP service
 	@printf "\nDiscovering live API URL...\n"
@@ -210,7 +212,7 @@ prod-release-mcp: gcp-auth-check build ## Build, push and deploy production MCP 
 	if [ -z "$$API_URL" ]; then echo "Error: Could not retrieve API service URL." && exit 1; fi; \
 	printf "API live URL discovered: $$API_URL\n"; \
 	printf "Building production MCP container...\n"; \
-	docker build -t $(REGISTRY)/mcp:latest -f services/mcp/Dockerfile .; \
+	docker build --platform linux/amd64 -t $(REGISTRY)/mcp:latest -f services/mcp/Dockerfile .; \
 	printf "Pushing MCP image to Artifact Registry...\n"; \
 	docker push $(REGISTRY)/mcp:latest; \
 	printf "Compiling declarative service definition...\n"; \
@@ -221,6 +223,8 @@ prod-release-mcp: gcp-auth-check build ## Build, push and deploy production MCP 
 	    services/mcp/service.template.yaml > services/mcp/service.yaml; \
 	printf "Deploying MCP service to Cloud Run...\n"; \
 	gcloud run services replace services/mcp/service.yaml --platform managed --region $(GCP_REGION)
+	@printf "Enabling public unauthenticated access...\n"
+	gcloud run services add-iam-policy-binding rook-notes-mcp --member="allUsers" --role="roles/run.invoker" --platform managed --region $(GCP_REGION) --quiet
 
 prod-release-frontend: gcp-auth-check build ## Build, push and deploy production Frontend service
 	@printf "\nDiscovering live API URL...\n"
@@ -228,7 +232,7 @@ prod-release-frontend: gcp-auth-check build ## Build, push and deploy production
 	if [ -z "$$API_URL" ]; then echo "Error: Could not retrieve API service URL." && exit 1; fi; \
 	printf "API live URL discovered: $$API_URL\n"; \
 	printf "Building production Frontend container...\n"; \
-	docker build -t $(REGISTRY)/frontend:latest -f services/frontend/Dockerfile .; \
+	docker build --platform linux/amd64 -t $(REGISTRY)/frontend:latest -f services/frontend/Dockerfile .; \
 	printf "Pushing Frontend image to Artifact Registry...\n"; \
 	docker push $(REGISTRY)/frontend:latest; \
 	printf "Compiling declarative service definition...\n"; \
@@ -239,6 +243,16 @@ prod-release-frontend: gcp-auth-check build ## Build, push and deploy production
 	    services/frontend/service.template.yaml > services/frontend/service.yaml; \
 	printf "Deploying Frontend service to Cloud Run...\n"; \
 	gcloud run services replace services/frontend/service.yaml --platform managed --region $(GCP_REGION)
+	@printf "Enabling public unauthenticated access...\n"
+	gcloud run services add-iam-policy-binding rook-notes-frontend --member="allUsers" --role="roles/run.invoker" --platform managed --region $(GCP_REGION) --quiet
 
 prod-release-all: prod-release-api prod-release-mcp prod-release-frontend ## Release all services in order (API -> MCP & Frontend)
 	@printf "\nAll services deployed successfully!\n"
+	@$(MAKE) prod-urls
+
+prod-urls: gcp-auth-check ## Print the live production URLs of all deployed services on Google Cloud Run
+	@printf "\n\033[1;32mActive Production URLs in project '$(GCP_PROJECT)' (%s):\033[0m\n" "$(GCP_REGION)"
+	@printf "  App (Frontend):   \033[4;36m%s\033[0m\n" $$(gcloud run services describe rook-notes-frontend --platform managed --region $(GCP_REGION) --format="value(status.url)" 2>/dev/null || echo "Not Deployed")
+	@printf "  API (Backend):     \033[4;36m%s\033[0m\n" $$(gcloud run services describe rook-notes-api --platform managed --region $(GCP_REGION) --format="value(status.url)" 2>/dev/null || echo "Not Deployed")
+	@printf "  MCP Server:       \033[4;36m%s\033[0m\n\n" $$(gcloud run services describe rook-notes-mcp --platform managed --region $(GCP_REGION) --format="value(status.url)" 2>/dev/null || echo "Not Deployed")
+

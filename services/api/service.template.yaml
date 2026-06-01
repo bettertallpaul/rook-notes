@@ -10,6 +10,7 @@ spec:
       annotations:
         run.googleapis.com/client-name: gcloud
         deploy-timestamp: "DEPLOY_TIMESTAMP_PLACEHOLDER"
+        autoscaling.knative.dev/maxScale: "5"
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
@@ -24,8 +25,6 @@ spec:
         env:
         - name: NODE_ENV
           value: "production"
-        - name: PORT
-          value: "3001"
         - name: TAXONOMY_MODEL
           value: "gemini-2.5-flash-lite"
         - name: AI_ENABLED

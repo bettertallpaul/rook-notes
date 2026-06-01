@@ -127,9 +127,17 @@ This command compiles the feature code, pushes the resulting container layers to
 
 Once all three services have successfully deployed, perform the following validation steps:
 
-1. **Frontend Loading**:
-   - Access the live frontend URL (available in the Cloud Run Console or via `gcloud run services describe rook-notes-frontend`).
+1. **Retrieve Live Endpoints (DX Shortcut)**:
+   - Run the following target to instantly fetch the live production URLs of all deployed services in your terminal:
+     ```bash
+     make prod-urls
+     ```
+   - This command dynamically queries GCP and prints the public endpoints for easy access and copy-pasting.
+
+2. **Frontend Loading**:
+   - Access the live frontend URL retrieved in the step above.
    - Confirm that the UI renders instantly and static assets compile beautifully.
+
 2. **Note Operations (React-API Sync)**:
    - Create a note, update its title, and add some tags.
    - Using your browser Developer Tools (`F12` -> Network tab), verify that CRUD requests sent to `/api/notes` resolve instantly through the Nginx proxy to the live `rook-notes-api` backend service.
