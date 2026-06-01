@@ -10,20 +10,20 @@ To ensure high performance, security, and low operational overhead, the producti
 
 Rather than a single monolith, the production environment packages and deploys **three separate co-equal container services**:
 
-1. **Frontend Client (`Dockerfile.app`)**:
+1. **Frontend Client (`services/frontend/Dockerfile`)**:
    - **Base**: `nginx:alpine`
-   - **Role**: Discards all Node.js and build-tool overhead, leaving a lean Nginx Alpine web server. It serves the pre-compiled static React client bundle (compiled in the first-stage `node:24-bookworm-slim` builder).
+   - **Role**: Discards all Node.js and build-tool overhead, leaving a lean Nginx Alpine web server. It serves the pre-compiled static React client bundle (compiled locally in the development container and written to the bind-mounted host `services/frontend/dist` directory).
    - **Routing**: Employs an unbuffered reverse-proxy block to route traffic from `/api` to the backend Express API service dynamically via the injected `${API_URL}` environment variable.
 
-2. **Express API Backend (`Dockerfile.api`)**:
+2. **Express API Backend (`services/api/Dockerfile`)**:
    - **Base**: `node:24-bookworm-slim`
-   - **Role**: Executes the core backend Express app directly (`npx tsx src/server/api.ts`) in a clean, non-watch production environment.
+   - **Role**: Bypasses the TypeScript engine and `node_modules` entirely in production. It copy-executes the pre-compiled ESM vanilla JavaScript bundle (`services/api/dist/index.js`) compiled locally via `tsup`. This drops container sizes significantly and mitigates Cloud Run cold-starts down to subsecond speeds.
    - **AI Integration**: Runs the AI tag suggestion taxonomy via the Vercel AI SDK, utilizing the `GOOGLE_GENERATIVE_AI_API_KEY` key.
    - **SSE Streaming**: Manages real-time data change broadcasts to connected frontend clients via Server-Sent Events (SSE).
 
-3. **Stateless MCP Server (`Dockerfile.mcp`)**:
+3. **Stateless MCP Server (`services/mcp/Dockerfile`)**:
    - **Base**: `node:24-bookworm-slim`
-   - **Role**: Executes the Streamable HTTP Model Context Protocol (MCP) server directly (`npx tsx src/server/mcp.ts`), providing intent-based tools (`search_notes`, `create_note`, `edit_note`, `delete_note`) for AI agent consumption.
+   - **Role**: Bypasses the TypeScript engine and `node_modules` entirely in production. It copy-executes the pre-compiled ESM vanilla JavaScript bundle (`services/mcp/dist/index.js`) compiled locally via `tsup`, providing intent-based tools (`search_notes`, `create_note`, `edit_note`, `delete_note`) for AI agent consumption.
    - **Downstream Connection**: Resolves and communicates with the active Express API backend using the `API_BASE_URL` environment variable.
 
 ---
@@ -47,7 +47,7 @@ make prod-verify
 ```
 This orchestrated target will:
 1. Stop and clean up any existing local production container instances for all services.
-2. Build all three production Docker images (`Dockerfile.app`, `Dockerfile.api`, and `Dockerfile.mcp`) in parallel.
+2. Build all three production Docker images from their strict workspace contexts (`services/frontend/Dockerfile`, `services/api/Dockerfile`, and `services/mcp/Dockerfile`) in parallel.
 3. Start all three containers in the background, properly configuring network ports and linking host gateway addresses between them.
 4. Execute `curl` checks against all three endpoints in sequence:
    - Verifies the Frontend client serves dynamic resources correctly on port `8080`.
@@ -123,7 +123,7 @@ The API service acts as the heart of the system and must be deployed first so ot
 2. Select **Deploy revision from a source repository** and click **Set up with Cloud Build**.
 3. Select the `rook-notes` repository and click **Next**.
 4. Set the build trigger branch to `main`.
-5. Under **Build Type**, select **Dockerfile**. Set the path to `Dockerfile.api` and click **Save**.
+5. Under **Build Type**, select **Dockerfile**. Set the path to `services/api/Dockerfile` and click **Save**.
 6. Name the service: `rook-notes-api` and choose a Tier 1 region close to you.
 7. Select **Request-based** CPU allocation and **Allow unauthenticated invocations**.
 8. Scroll down to **Container, Networking, Security** -> **Container tab**:
@@ -140,7 +140,7 @@ The MCP server provides tool interfaces for AI agents and queries the API backen
 1. Click **Create Service** in the Cloud Run console.
 2. Select **Deploy revision from a source repository** and configure Cloud Build.
 3. Select the `rook-notes` repository, set the branch to `main`.
-4. Under **Build Type**, select **Dockerfile**. Set the path to `Dockerfile.mcp` and click **Save**.
+4. Under **Build Type**, select **Dockerfile**. Set the path to `services/mcp/Dockerfile` and click **Save**.
 5. Name the service: `rook-notes-mcp`.
 6. Select **Request-based** CPU allocation and **Allow unauthenticated invocations**.
 7. Under **Container** settings:
@@ -156,7 +156,7 @@ The web client serves compiled React assets via Nginx and proxies `/api` calls d
 
 1. Click **Create Service** in the Cloud Run console.
 2. Configure Cloud Build for the `rook-notes` repository on the `main` branch.
-3. Under **Build Type**, select **Dockerfile**. Set the path to `Dockerfile.app` (the renamed root Dockerfile) and click **Save**.
+3. Under **Build Type**, select **Dockerfile**. Set the path to `services/frontend/Dockerfile` and click **Save**.
 4. Name the service: `rook-notes-frontend`.
 5. Select **Request-based** CPU allocation and **Allow unauthenticated invocations**.
 6. Under **Container** settings:

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useNoteStore } from '../../store/useNoteStore'
 import type { LifecycleFilter } from '../../types/note'
 import clsx from 'clsx'
-import rookLogo from '../../../assetts/rook-logo-red.svg'
+import rookLogo from '../../assets/rook-logo-red.svg'
 
 const LIFECYCLE_OPTIONS: { value: LifecycleFilter; label: string }[] = [
   { value: 'all', label: 'All Notes' },

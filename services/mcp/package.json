@@ -1,0 +1,22 @@
+{
+  "name": "@rook/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts --format esm --target node24 --clean"
+  },
+
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@rook/shared": "workspace:*",
+    "express": "^5.2.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "tsx": "^4.21.0",
+    "typescript": "^5.5.3"
+  }
+}

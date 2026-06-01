@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
-import type { Note, Label } from '../shared/schemas.js'
+import type { Note, Label } from '@rook/shared'
 import { EventEmitter } from 'node:events'
 
 const DATA_FILE = path.resolve(process.env.DATA_DIR ?? './data', 'notes.json')

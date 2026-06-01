@@ -1,7 +1,7 @@
 import { storeEvents, listNotes, getNote } from '../store.js'
 import { suggestLabels } from '../ai/taxonomy.js'
-import { config } from '../../shared/schemas.js'
-import type { Note } from '../../shared/schemas.js'
+import { config } from '@rook/shared'
+import type { Note } from '@rook/shared'
 
 
 /**

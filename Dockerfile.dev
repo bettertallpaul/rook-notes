@@ -6,9 +6,20 @@ RUN corepack enable pnpm
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml* ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# Copy workspace lockfile and descriptors
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY services/shared/package.json ./services/shared/package.json
+COPY services/frontend/package.json ./services/frontend/package.json
+COPY services/api/package.json ./services/api/package.json
+COPY services/mcp/package.json ./services/mcp/package.json
+
+# Fetch packages to the store using cached mounts
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch
+
+# Copy the rest of the workspace source code
+COPY . .
+
+# Complete the install offline using the fetched cache
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --offline --frozen-lockfile
 
 EXPOSE 5173
-
-CMD ["pnpm", "run", "dev"]

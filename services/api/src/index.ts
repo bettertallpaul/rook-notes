@@ -4,7 +4,7 @@ import { apiReference } from '@scalar/express-api-reference'
 import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
 import { z } from 'zod'
 import * as store from './store.js'
-import { NoteSchema, CreateNoteSchema, UpdateNoteSchema, AddLabelSchema, config } from '../shared/schemas.js'
+import { NoteSchema, CreateNoteSchema, UpdateNoteSchema, AddLabelSchema, config } from '@rook/shared'
 import { registerListeners, classifyLabels } from './events/listeners.js'
 import { suggestLabels } from './ai/taxonomy.js'
 
