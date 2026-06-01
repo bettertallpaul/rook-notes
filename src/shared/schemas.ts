@@ -3,16 +3,13 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi'
 
 extendZodWithOpenApi(z)
 
-export const LabelSchema = z.object({
-  name: z.string().openapi({ example: 'work' }),
-  source: z.enum(['user']).openapi({ example: 'user' }),
-}).openapi('Label')
+export const LabelSchema = z.string().openapi('Label')
 
 export const NoteSchema = z.object({
   id: z.string().uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
   title: z.string().openapi({ example: 'My Note' }),
   content: z.string().openapi({ example: '# Hello\n\nSome content here.' }),
-  labels: z.array(LabelSchema).openapi({ example: [{ name: 'work', source: 'user' }] }),
+  labels: z.array(LabelSchema).openapi({ example: ['work'] }),
   createdAt: z.number().openapi({ example: 1704067200000 }),
   updatedAt: z.number().openapi({ example: 1704067200000 }),
   openedAt: z.number().openapi({ example: 1704067200000 }),
@@ -22,7 +19,7 @@ export const NoteSchema = z.object({
 export const CreateNoteSchema = z.object({
   title: z.string().default('').openapi({ example: 'My Note' }),
   content: z.string().default('').openapi({ example: '# Hello' }),
-  labels: z.array(LabelSchema).default([]).openapi({ example: [{ name: 'work', source: 'user' }] }),
+  labels: z.array(LabelSchema).default([]).openapi({ example: ['work'] }),
 }).openapi('CreateNote')
 
 export const UpdateNoteSchema = z.object({
@@ -32,7 +29,6 @@ export const UpdateNoteSchema = z.object({
 
 export const AddLabelSchema = z.object({
   name: z.string().openapi({ example: 'work' }),
-  source: z.enum(['user']).default('user').openapi({ example: 'user' }),
 }).openapi('AddLabel')
 
 export type Label = z.infer<typeof LabelSchema>

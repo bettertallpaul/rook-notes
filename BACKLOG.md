@@ -5,11 +5,13 @@
 - [ ] **AI Milestone 2: Chat with my Vault:** Build semantic search and RAG integration to enable natural language queries over the knowledge base. Spec's out with opsx.
 
 ## Next
-- [ ] **Include noindex instructions**
-- [ ] **Automate Cloud Run Setup** Run `/opsx-propose automate-cloud-run-setup` to create tasks and specs for automating the Google Cloud run intitial setup.
+- [ ] **Include noindex instructions** to prevent live instances from being indexed by search engines.
+- [ ] **Refactor Label Schema (Remove redundant 'source' field):** Simplify the labels architecture by removing the legacy `source` field (which is now always `'user'`) and refactor labels to be a clean array of strings (`string[]`) across frontend, backend schemas (`schemas.ts`), store, and MCP server.
+- [ ] **Automate Cloud Run Setup:** Automate the multi-service provision and deployment pipeline (using Terraform or a `gcloud` CLI script) to set up the 3 Cloud Run services, configure env variables/ports, inject dynamic URLs, and link triggers automatically, completely eliminating manual Google Cloud Console UI configuration. Run `/opsx-propose automate-cloud-run-setup` to generate the specs and implementation tasks.
 
 ## Later
 - [ ] **Fix `make test` execution:** Add a `"test"` script to `package.json` so that the `make test` command successfully executes tests inside the container instead of failing with a missing script error.
+- [ ] **Optimize Cloud Build triggers:** Configure `Included files` and `Ignored files` filters for each service trigger in the Google Cloud Console to prevent redundant container rebuilds when only documentation or unrelated service code changes.
 - [ ] **Expand AI Evaluations:** Determine if the taxonomy evaluations need more test cases (beyond the current two synthetic cases in `dataset.json`) to thoroughly benchmark tag suggestions.
 - [ ] **Integrate `make test-ai`:** Include a specific `test-ai` target in the `Makefile` and decide whether to keep LLM evaluations separate from standard core application testing (`make test`).
 - [ ] **AI Milestone 3: Intelligent Deduplication:** Implement agentic workflow to proactively surface and resolve redundant note content.

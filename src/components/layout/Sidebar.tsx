@@ -15,7 +15,7 @@ export function Sidebar() {
     useNoteStore()
 
   const labels = useMemo(() => {
-    const all = Object.values(notes).flatMap(n => n.labels.map(l => l.name))
+    const all = Object.values(notes).flatMap(n => n.labels)
     return [...new Set(all)].sort()
   }, [notes])
 

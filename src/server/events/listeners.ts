@@ -17,7 +17,7 @@ import type { Note } from '../../shared/schemas.js'
 export function classifyLabels(newLabels: string[]): { autoLabels: string[]; suggestedLabels: string[] } {
   const allNotes = listNotes()
   const knownLabelNames = new Set(
-    allNotes.flatMap(n => n.labels.map(l => l.name.toLowerCase()))
+    allNotes.flatMap(n => n.labels.map(l => l.toLowerCase()))
   )
 
   const autoLabels: string[] = []

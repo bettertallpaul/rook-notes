@@ -13,7 +13,7 @@ export function useFilteredNotes(
     let result = Object.values(notes)
 
     if (activeLabelFilter) {
-      result = result.filter(n => n.labels.some(l => l.name === activeLabelFilter))
+      result = result.filter(n => n.labels.includes(activeLabelFilter))
     }
 
     if (lifecycleFilter === 'recent') {
@@ -28,7 +28,7 @@ export function useFilteredNotes(
         n =>
           (n.title ?? '').toLowerCase().includes(q) ||
           n.content.toLowerCase().includes(q) ||
-          n.labels.some(l => l.name.toLowerCase().includes(q))
+          n.labels.some(l => l.toLowerCase().includes(q))
       )
     }
 

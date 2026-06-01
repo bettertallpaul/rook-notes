@@ -26,14 +26,14 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   // In Opt-In mode, only labels with source 'user' are considered "Applied"
-  const appliedLabels = labels.filter(l => l.source === 'user')
+  const appliedLabels = labels
 
   const allLabels = [...new Set(
-    Object.values(notes).flatMap(n => n.labels.map(l => l.name))
+    Object.values(notes).flatMap(n => n.labels)
   )].sort()
 
   const suggestions = input.trim()
-    ? allLabels.filter(l => l.toLowerCase().includes(input.toLowerCase()) && !labels.some(lbl => lbl.name === l))
+    ? allLabels.filter(l => l.toLowerCase().includes(input.toLowerCase()) && !labels.includes(l))
     : []
 
   const commitLabel = (value = input) => {
@@ -51,8 +51,8 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
       const results = await suggestTags(noteId)
       // Filter out labels already applied to this note
       const filteredResults = {
-        existing: results.existing.filter(name => !appliedLabels.some(l => l.name === name)),
-        new: results.new.filter(name => !appliedLabels.some(l => l.name === name))
+        existing: results.existing.filter(name => !appliedLabels.includes(name)),
+        new: results.new.filter(name => !appliedLabels.includes(name))
       }
       if (filteredResults.existing.length === 0 && filteredResults.new.length === 0) {
         toast.info('No new tags suggested.')
@@ -111,7 +111,7 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
       }
     } else if (e.key === 'Backspace' && !input && appliedLabels.length > 0) {
       const last = appliedLabels[appliedLabels.length - 1]
-      removeLabel(noteId, last.name)
+      removeLabel(noteId, last)
     }
   }
 
@@ -123,19 +123,19 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
           onClick={() => inputRef.current?.focus()}
         >
           {/* Applied tags */}
-          {appliedLabels.map(labelObj => (
+          {appliedLabels.map(labelName => (
             <span
-              key={labelObj.name}
+              key={labelName}
               className="group flex items-center gap-1.5 text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded-md border border-transparent transition-colors"
             >
-              {labelObj.name}
+              {labelName}
               <button
                 onClick={e => {
                   e.stopPropagation()
-                  removeLabel(noteId, labelObj.name)
+                  removeLabel(noteId, labelName)
                 }}
                 className="text-red-300 hover:text-red-600 transition-colors leading-none cursor-pointer"
-                aria-label={`Remove tag ${labelObj.name}`}
+                aria-label={`Remove tag ${labelName}`}
               >
                 ×
               </button>

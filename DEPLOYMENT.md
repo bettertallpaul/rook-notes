@@ -77,24 +77,32 @@ If you want to manually run and debug services in parallel locally:
 
 ---
 
-## 3. Preparing the Production Branch
-<!-- TODO: my process no longer involves dev/main, but rather new branches created for various features/fixes/etc that get merged back into main and deleted once they have served their purpose. Need to update this section accordingly. -->
+## 3. Production Release Workflow
 
-Because active development takes place on the `dev` branch, your newly created production configurations currently only exist on `dev`. Google Cloud Run triggers are designed to build from your production branch (`main`). Therefore, you must push your `dev` changes to GitHub and merge them into `main` **before** connecting the services in the Google Cloud Console.
+Active development is performed in dedicated, short-lived feature or fix branches. Google Cloud Run triggers are configured to build and deploy from the production branch (`main`). 
 
-### Merge workflow:
-```bash
-git add .
-git commit -m "feat: implement multi-service production container setup"
-git push origin dev
+To release new configurations or updates to production, you push your work branch and merge it into `main` using a standard Pull Request (PR) workflow on GitHub.
 
-# Merge to main
-git checkout main
-git pull origin main
-git merge dev
-git push origin main
-git checkout dev
-```
+### Step-by-Step Release Process:
+
+1. **Commit your changes locally** on your active work branch:
+   ```bash
+   git add .
+   git commit -m "feat: implement multi-service production container setup"
+   ```
+
+2. **Push your branch to GitHub**:
+   ```bash
+   git push origin <your-branch-name>
+   ```
+
+3. **Create and Merge a Pull Request (PR)**:
+   - Navigate to your repository on GitHub and open a Pull Request from `<your-branch-name>` into `main`.
+   - Review changes, and merge the PR into `main`.
+   - Delete the short-lived feature branch on GitHub once it has served its purpose.
+
+4. **Automatic Cloud Deployment**:
+   - Merging into `main` automatically triggers Google Cloud Build to pull the new changes, rebuild the respective Dockerfiles, and roll out zero-downtime updates to your active Cloud Run services!
 
 ---
 
