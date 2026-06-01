@@ -5,7 +5,6 @@
 
 ## Next
 - [ ] **Include noindex instructions** to prevent live instances from being indexed by search engines.
-- [ ] **Refactor build process for simplicity and speed:** As highlighted in `session_summary.md`, includes repo reorganization, and hybrid local-build/GCP-deploy pipeline.
 - [ ] **Extend `make prod-verify` with dynamic feature assertions:** Go beyond basic infrastructure smoke checks (port accessibility) by implementing lightweight integration tests that assert actual note CRUD operations and basic MCP tool functionality against the running production container suite before teardown.
 
 ## Later
@@ -18,6 +17,7 @@
 
 | Completion Date | Task | Notes |
 | - | - | - |
+| 2026-06-01 | Refactor build process for simplicity and speed | Transitioned to a pure local container delivery flow using OrbStack, registry push, and declarative Knative Service manifests. |
 | 2026-06-01 | Deploy Backend Services | Package and deploy Express API and MCP servers to Google Cloud Run. Ultimately moving away from this approach. |
 | 2026-05-31 | Refactor Label Schema | Simplified labels architecture by removing the legacy `source` field and refactored labels to be a clean array of strings (`string[]`) across schemas, store, API backend, and MCP server. |
 | 2026-05-28 | Production Build (Frontend) | Standardized React SPA production build using dynamic Nginx proxying, and documented in DEPLOYMENT.md. |
