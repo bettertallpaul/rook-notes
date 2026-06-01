@@ -1,53 +1,18 @@
 {
-  "name": "rook",
+  "name": "rook-monorepo",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@9.1.0",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "api": "tsx watch src/server/api.ts",
-    "mcp": "tsx watch src/server/mcp.ts",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
+    "build": "pnpm --filter @rook/shared build && pnpm --filter @rook/frontend build && pnpm --filter @rook/api build && pnpm --filter @rook/mcp build",
     "design:lint": "npx @google/design.md lint DESIGN.md",
     "design:diff": "npx @google/design.md diff DESIGN.md",
     "design:export": "npx @google/design.md export",
     "design:spec": "npx @google/design.md spec"
   },
-  "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.71",
-    "@ai-sdk/google": "^3.0.64",
-    "@asteasolutions/zod-to-openapi": "^8.4.3",
-    "@modelcontextprotocol/sdk": "^1.27.1",
-    "@scalar/express-api-reference": "^0.9.2",
-    "@tiptap/markdown": "^3.20.1",
-    "@tiptap/react": "^3.20.1",
-    "@tiptap/starter-kit": "^3.20.1",
-    "ai": "^6.0.168",
-    "clsx": "^2.1.1",
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "sonner": "^2.0.7",
-    "uuid": "^10.0.0",
-    "zod": "^4.3.6",
-    "zustand": "^4.5.5"
-  },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.0.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/uuid": "^10.0.0",
-    "@vitejs/plugin-react": "^4.3.1",
     "@google/design.md": "latest",
-    "promptfoo": "^0.121.9",
-    "tailwindcss": "^4.0.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.5.3",
-    "vite": "^5.4.2"
+    "typescript": "^5.5.3"
   }
 }

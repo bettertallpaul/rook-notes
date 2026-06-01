@@ -39,7 +39,7 @@ dev: ## Start containers in the foreground
 	docker compose up
 
 build: ## Build the app
-	docker compose exec app pnpm run build
+	docker compose run --rm app pnpm run build
 
 test: ## Run tests
 	docker compose exec app pnpm test
@@ -88,15 +88,15 @@ design-spec: ## Output the DESIGN.md format specification
 
 # --- Individual Service Builds ---
 prod-app-build: ## Build the production Frontend Docker image
-	docker build -t rook-notes:prod -f Dockerfile.app .
+	docker build -t rook-notes:prod -f services/frontend/Dockerfile services/frontend
 
 prod-api-build: ## Build the production API Docker image
-	docker build -t rook-notes-api:prod -f Dockerfile.api .
+	docker build -t rook-notes-api:prod -f services/api/Dockerfile services/api
 
 prod-mcp-build: ## Build the production MCP Docker image
-	docker build -t rook-notes-mcp:prod -f Dockerfile.mcp .
+	docker build -t rook-notes-mcp:prod -f services/mcp/Dockerfile services/mcp
 
-prod-build: prod-app-build prod-api-build prod-mcp-build ## Build all production Docker images (Frontend, API, MCP)
+prod-build: build prod-app-build prod-api-build prod-mcp-build ## Build all production Docker images (Frontend, API, MCP)
 
 prod-port-check: ## Check if development containers are occupying production ports
 	@if docker ps --format '{{.Names}}' | grep -E "rook-notes-(app|api|mcp)-1" >/dev/null 2>&1; then \

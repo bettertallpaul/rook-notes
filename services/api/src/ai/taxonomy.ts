@@ -1,7 +1,7 @@
 import { generateObject } from 'ai';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';
-import { config } from '../../shared/schemas.js';
+import { config } from '@rook/shared';
 
 const TaxonomySchema = z.object({
   labels: z.array(z.string()).describe('List of short, 1-2 word tags for the note.'),

@@ -13,3 +13,6 @@ plans
 *.local
 postman
 scripts
+
+# Allow compiled production artifacts to be copied during docker builds
+!services/*/dist/

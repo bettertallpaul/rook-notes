@@ -3,9 +3,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    command: pnpm --filter @rook/frontend dev
     volumes:
       - .:/app
       - node_modules:/app/node_modules
+      - /app/services/shared/node_modules
+      - /app/services/frontend/node_modules
+      - /app/services/api/node_modules
+      - /app/services/mcp/node_modules
       - notes_data:/app/data
     ports:
       - "5173:5173"
@@ -20,10 +25,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: pnpm run api
+    command: pnpm --filter @rook/api dev
     volumes:
       - .:/app
       - node_modules:/app/node_modules
+      - /app/services/shared/node_modules
+      - /app/services/frontend/node_modules
+      - /app/services/api/node_modules
+      - /app/services/mcp/node_modules
       - notes_data:/app/data
     ports:
       - "3001:3001"
@@ -31,6 +40,7 @@ services:
       - .env
     environment:
       - NODE_ENV=development
+      - GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_API_KEY}
     labels:
       - dev.orbstack.domains=api.rook-notes.local
 
@@ -38,10 +48,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: pnpm run mcp
+    command: pnpm --filter @rook/mcp dev
     volumes:
       - .:/app
       - node_modules:/app/node_modules
+      - /app/services/shared/node_modules
+      - /app/services/frontend/node_modules
+      - /app/services/api/node_modules
+      - /app/services/mcp/node_modules
       - notes_data:/app/data
     ports:
       - "3002:3002"

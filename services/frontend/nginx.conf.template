@@ -1,0 +1,26 @@
+server {
+    listen ${PORT};
+    server_name localhost;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy API requests to the backend API service
+    location /api {
+        proxy_pass ${API_URL}$request_uri;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $proxy_host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 24h;
+
+        # Enable SSL SNI support for HTTPS upstreams
+        proxy_ssl_server_name on;
+    }
+}

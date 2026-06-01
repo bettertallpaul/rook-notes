@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import express from 'express'
 import { z } from 'zod'
-import type { Note } from '../shared/schemas.js'
+import type { Note } from '@rook/shared'
 
 const API_BASE = process.env.API_BASE_URL ?? 'http://localhost:3001'
 
