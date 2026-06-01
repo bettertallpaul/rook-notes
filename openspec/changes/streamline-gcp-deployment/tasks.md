@@ -1,10 +1,16 @@
 ## 1. Local CLI Pre-requisites & Setup
 
 - [ ] 1.1 Install Google Cloud SDK (`google-cloud-sdk`) on the host Mac via Homebrew (`brew install --cask google-cloud-sdk`)
-- [ ] 1.2 Authenticate the local gcloud CLI using interactive OAuth (`gcloud auth login`) and set the active production project
-- [ ] 1.3 Configure the local Docker engine credential helper for secure Google Artifact Registry communication (`gcloud auth configure-docker`)
-- [ ] 1.4 Append generated Knative service manifests (`services/*/service.yaml`) to the repository root `.gitignore` to prevent tracking of dynamic deployment targets
-- [ ] 1.5 Optimize the repository root `.dockerignore` file, ignoring raw `src/` directories, `node_modules`, and local development databases (`data/`) to speed up local OrbStack build context transfer rates
+- [ ] 1.2 Authenticate the local gcloud CLI (`gcloud auth login`) and list available Google Cloud organizations (`gcloud organizations list`) to identify available organization IDs
+- [ ] 1.3 **USER SIGN-OFF**: Explicitly output the list of detected Google Cloud organization IDs and wait for the user to review and confirm the correct billing-enabled Organization ID before proceeding
+- [ ] 1.4 Create the dedicated GCP project (e.g., `rook-notes-prod`) targeting the user-approved organization ID and bind it as active (`gcloud config set project`)
+- [ ] 1.5 Ensure the dedicated GCP project is linked to an active billing account (required to unlock Cloud Run Free Tier) and enable the required APIs: Cloud Run, Artifact Registry, and Secret Manager
+- [ ] 1.6 Configure the local Docker engine credential helper for secure Google Artifact Registry communication (`gcloud auth configure-docker`)
+- [ ] 1.7 Append generated Knative service manifests (`services/*/service.yaml`) to the repository root `.gitignore` to prevent tracking of dynamic deployment targets
+- [ ] 1.8 Optimize the repository root `.dockerignore` file, ignoring raw `src/` directories, `node_modules`, and local development databases (`data/`) to speed up local OrbStack build context transfer rates
+
+
+
 
 ## 2. Declarative Service Templates & Dockerfile Refactoring
 
