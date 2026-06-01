@@ -177,7 +177,7 @@ app.delete('/api/notes/:id', (req, res) => {
 app.post('/api/notes/:id/labels', (req, res) => {
   const result = AddLabelSchema.safeParse(req.body ?? {})
   if (!result.success) return res.status(400).json({ error: result.error.flatten() })
-  const note = store.addLabel(req.params.id, result.data.name, result.data.source)
+  const note = store.addLabel(req.params.id, result.data.name)
   if (!note) return res.status(404).json({ error: 'not found' })
   res.json(note)
 })
@@ -197,7 +197,7 @@ app.post('/api/notes/:id/suggest-tags', async (req, res) => {
   try {
     const allNotes = store.listNotes()
     const existingTaxonomy = Array.from(new Set(
-      allNotes.flatMap(n => n.labels.map(l => l.name))
+      allNotes.flatMap(n => n.labels)
     ))
 
     const suggestions = await suggestLabels(note.content, note.title, existingTaxonomy)

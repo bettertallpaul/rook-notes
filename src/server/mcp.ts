@@ -68,8 +68,7 @@ function createRookMcpServer() {
       labels: z.array(z.string()).optional().describe('Labels to apply'),
     },
     async ({ title, content, labels }) => {
-      const labelObjects = labels ? labels.map(name => ({ name, source: 'user' as const })) : []
-      const note = await apiPost<Note>('/api/notes', { title, content: content ?? '', labels: labelObjects })
+      const note = await apiPost<Note>('/api/notes', { title, content: content ?? '', labels: labels ?? [] })
       return ok(note)
     },
   )
@@ -99,12 +98,12 @@ function createRookMcpServer() {
 
       // Reconcile labels if provided
       if (labels !== undefined) {
-        const currentNames = new Set(note.labels.map(l => l.name))
+        const currentNames = new Set(note.labels)
         const desired = new Set(labels)
         const toAdd = labels.filter(name => !currentNames.has(name))
-        const toRemove = note.labels.filter(l => !desired.has(l.name)).map(l => l.name)
+        const toRemove = note.labels.filter(l => !desired.has(l))
         for (const name of toAdd) {
-          note = await apiPost<Note>(`/api/notes/${id}/labels`, { name, source: 'user' })
+          note = await apiPost<Note>(`/api/notes/${id}/labels`, { name })
         }
         for (const name of toRemove) {
           await apiDelete(`/api/notes/${id}/labels/${encodeURIComponent(name)}`)

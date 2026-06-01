@@ -15,8 +15,7 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
   const snippet = getSnippet(note.content, 140, !hasTitle)
   const stale = isStale(note)
 
-  // In Opt-In mode, only show user-applied (and accepted) labels on the card
-  const visibleLabels = note.labels.filter(l => l.source === 'user')
+  const visibleLabels = note.labels
 
   return (
     <button
@@ -49,12 +48,12 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
 
         {visibleLabels.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1 items-center">
-            {visibleLabels.map(labelObj => (
+            {visibleLabels.map(labelName => (
               <span
-                key={labelObj.name}
+                key={labelName}
                 className="flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded bg-red-50 text-red-600"
               >
-                {labelObj.name}
+                {labelName}
               </span>
             ))}
           </div>

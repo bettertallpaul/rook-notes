@@ -10,38 +10,7 @@ export const storeEvents = new EventEmitter()
 
 function read(): Record<string, Note> {
   try {
-    const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'))
-    let migrated = false
-    
-    // Migrate legacy string labels to object labels
-    for (const id in data) {
-      const note = data[id]
-      if (note.labels && note.labels.length > 0 && typeof note.labels[0] === 'string') {
-        // @ts-expect-error - migrating legacy data
-        note.labels = note.labels.map(l => ({ name: l, source: 'user' }))
-        migrated = true
-      }
-    }
-    
-    // Phase 4 Migration: Remove non-user labels from persisted data
-    // In the Opt-In model, we no longer persist AI suggestions automatically.
-    for (const id in data) {
-      const note = data[id]
-      if (note.labels) {
-        const originalCount = note.labels.length
-        note.labels = note.labels.filter((l: any) => l.source === 'user')
-        if (note.labels.length !== originalCount) migrated = true
-      }
-    }
-    
-    // Auto-save the migrated data so it persists
-    if (migrated) {
-      const dir = path.dirname(DATA_FILE)
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-      fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2))
-    }
-    
-    return data
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'))
   } catch {
     return {}
   }
@@ -61,7 +30,7 @@ export function getNote(id: string): Note | undefined {
   return read()[id]
 }
 
-export function createNote(title = '', content = '', labels: Label[] = []): Note {
+export function createNote(title = '', content = '', labels: string[] = []): Note {
   const now = Date.now()
   const note: Note = {
     id: randomUUID(),
@@ -105,12 +74,12 @@ export function deleteNote(id: string): boolean {
   return true
 }
 
-export function addLabel(id: string, name: string, source: "user" = 'user'): Note | undefined {
+export function addLabel(id: string, name: string): Note | undefined {
   const notes = read()
   const note = notes[id]
   if (!note) return undefined
-  if (!note.labels.some(l => l.name === name)) {
-    note.labels.push({ name, source })
+  if (!note.labels.includes(name)) {
+    note.labels.push(name)
     note.updatedAt = Date.now()
     notes[id] = note
     write(notes)
@@ -123,7 +92,7 @@ export function removeLabel(id: string, name: string): Note | undefined {
   const notes = read()
   const note = notes[id]
   if (!note) return undefined
-  note.labels = note.labels.filter(l => l.name !== name)
+  note.labels = note.labels.filter(l => l !== name)
   note.updatedAt = Date.now()
   notes[id] = note
   write(notes)
@@ -137,6 +106,6 @@ export function searchNotes(query: string): Note[] {
   return listNotes().filter(n =>
     n.title.toLowerCase().includes(q) ||
     n.content.toLowerCase().includes(q) ||
-    n.labels.some(l => l.name.toLowerCase().includes(q))
+    n.labels.some(l => l.toLowerCase().includes(q))
   )
 }
