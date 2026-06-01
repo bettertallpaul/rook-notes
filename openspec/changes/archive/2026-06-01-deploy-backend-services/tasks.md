@@ -38,3 +38,18 @@
 - [ ] 7.2 Deploy the stateless MCP server on Google Cloud Run using the `Dockerfile.mcp` configuration, and set its `API_BASE_URL` environment variable to point to the live HTTPS URL of the deployed Express API service.
 - [ ] 7.3 Configure the Frontend service environment variable `API_URL` to point to the live HTTPS URL of the deployed Express API.
 - [ ] 7.4 Navigate to the live frontend URL in a browser and verify that SSE-driven updates and tag suggestion workflows function correctly.
+
+---
+
+## Archival & Pivot Note (2026-06-01)
+
+During live Google Cloud Run verification, the direct containerization approach running `npx tsx` on startup in the ephemeral containers was found to be too convoluted and buggy. Building inside the production container environments on serverless runtimes led to cold start latency and runtime dependency inconsistencies. 
+
+### Selected Pivot Path:
+We are pivoting to a **Multi-Service Local Container Compilation & Delta Pushes** (or **Artifact-First Build-Outside-Docker**) packaging pattern, which is now documented in `session_summary.md` and slated for refactoring under the backlog. Key highlights of the new strategy:
+1. **Local pre-compilation:** Compile frontend static assets and transpile backend TS to pure ESM JS inside the Node 24 development container in OrbStack (`make build`).
+2. **Lean single-stage containers:** Build ultra-lightweight Docker images (`~30-50MB`) that copy pre-compiled `./dist` folders and run native `node` instead of transpiling on boot, leading to sub-second cold starts.
+3. **Optimized organization:** Symmetrical, clean Dockerfiles grouped within a dedicated `services/` folder.
+
+As a result, this experimental feature branch is being archived with incomplete verification steps.
+
