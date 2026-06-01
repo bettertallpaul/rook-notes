@@ -1,0 +1,30 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: rook-notes-frontend
+  labels:
+    cloud.googleapis.com/location: GCP_REGION_PLACEHOLDER
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/client-name: gcloud
+        deploy-timestamp: "DEPLOY_TIMESTAMP_PLACEHOLDER"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+      - image: REGISTRY_PLACEHOLDER/frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "512Mi"
+        env:
+        - name: PORT
+          value: "80"
+        - name: API_URL
+          value: "API_URL_PLACEHOLDER"
+        - name: NGINX_ENVSUBST_FILTER
+          value: "^(PORT|API_URL)$"

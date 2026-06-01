@@ -1,6 +1,14 @@
-.PHONY: help up shell install dev build test down purge seed fresh design-lint design-diff design-export design-spec prod-build prod-run prod-clean prod-verify prod-api-build prod-mcp-build prod-api-run prod-mcp-run prod-backend-clean prod-backend-verify prod-app-build prod-app-run prod-app-test prod-app-clean prod-app-verify
+.PHONY: help up shell install dev build test down purge seed fresh design-lint design-diff design-export design-spec prod-build prod-run prod-clean prod-verify prod-api-build prod-mcp-build prod-api-run prod-mcp-run prod-backend-clean prod-backend-verify prod-app-build prod-app-run prod-app-test prod-app-clean prod-app-verify gcp-auth-check prod-release-api prod-release-mcp prod-release-frontend prod-release-all
 
 .DEFAULT_GOAL := help
+
+# ==========================================
+# --- GCP DEPLOYMENT CONFIGURATION ---
+# ==========================================
+GCP_PROJECT ?= rook-notes-prod
+GCP_REGION ?= us-central1
+REGISTRY ?= $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/rook-notes
+TIMESTAMP = $(shell date +%s)
 
 # ==========================================
 # --- HELP / UTILITIES ---
@@ -88,13 +96,13 @@ design-spec: ## Output the DESIGN.md format specification
 
 # --- Individual Service Builds ---
 prod-app-build: ## Build the production Frontend Docker image
-	docker build -t rook-notes:prod -f services/frontend/Dockerfile services/frontend
+	docker build -t rook-notes:prod -f services/frontend/Dockerfile .
 
 prod-api-build: ## Build the production API Docker image
-	docker build -t rook-notes-api:prod -f services/api/Dockerfile services/api
+	docker build -t rook-notes-api:prod -f services/api/Dockerfile .
 
 prod-mcp-build: ## Build the production MCP Docker image
-	docker build -t rook-notes-mcp:prod -f services/mcp/Dockerfile services/mcp
+	docker build -t rook-notes-mcp:prod -f services/mcp/Dockerfile .
 
 prod-build: build prod-app-build prod-api-build prod-mcp-build ## Build all production Docker images (Frontend, API, MCP)
 
@@ -171,3 +179,66 @@ prod-verify: prod-clean prod-build prod-run ## Run the full build-run-test produ
 	@printf "MCP container test passed!\n"
 	@$(MAKE) prod-clean
 	@printf "\nFull multi-service production verification pipeline completed successfully!\n"
+
+# ==========================================
+# --- GCP PRODUCTION RELEASE PIPELINE ---
+# ==========================================
+
+gcp-auth-check: ## Verify that gcloud is authenticated and project is set correctly
+	@if [ "$$(gcloud config get-value project 2>/dev/null)" != "$(GCP_PROJECT)" ]; then \
+		echo "Error: Active gcloud project must be set to $(GCP_PROJECT)"; \
+		exit 1; \
+	fi
+	@gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep . >/dev/null || (echo "Error: Not authenticated with gcloud. Run 'gcloud auth login'" && exit 1)
+
+prod-release-api: gcp-auth-check build ## Build, push and deploy production API service
+	@printf "\nBuilding production API container...\n"
+	docker build -t $(REGISTRY)/api:latest -f services/api/Dockerfile .
+	@printf "Pushing API image to Artifact Registry...\n"
+	docker push $(REGISTRY)/api:latest
+	@printf "Compiling declarative service definition...\n"
+	sed -e "s|GCP_REGION_PLACEHOLDER|$(GCP_REGION)|g" \
+	    -e "s|REGISTRY_PLACEHOLDER|$(REGISTRY)|g" \
+	    -e "s|DEPLOY_TIMESTAMP_PLACEHOLDER|$(TIMESTAMP)|g" \
+	    services/api/service.template.yaml > services/api/service.yaml
+	@printf "Deploying API service to Cloud Run...\n"
+	gcloud run services replace services/api/service.yaml --platform managed --region $(GCP_REGION)
+
+prod-release-mcp: gcp-auth-check build ## Build, push and deploy production MCP service
+	@printf "\nDiscovering live API URL...\n"
+	@API_URL=$$(gcloud run services describe rook-notes-api --platform managed --region $(GCP_REGION) --format="value(status.url)"); \
+	if [ -z "$$API_URL" ]; then echo "Error: Could not retrieve API service URL." && exit 1; fi; \
+	printf "API live URL discovered: $$API_URL\n"; \
+	printf "Building production MCP container...\n"; \
+	docker build -t $(REGISTRY)/mcp:latest -f services/mcp/Dockerfile .; \
+	printf "Pushing MCP image to Artifact Registry...\n"; \
+	docker push $(REGISTRY)/mcp:latest; \
+	printf "Compiling declarative service definition...\n"; \
+	sed -e "s|GCP_REGION_PLACEHOLDER|$(GCP_REGION)|g" \
+	    -e "s|REGISTRY_PLACEHOLDER|$(REGISTRY)|g" \
+	    -e "s|DEPLOY_TIMESTAMP_PLACEHOLDER|$(TIMESTAMP)|g" \
+	    -e "s|API_BASE_URL_PLACEHOLDER|$$API_URL|g" \
+	    services/mcp/service.template.yaml > services/mcp/service.yaml; \
+	printf "Deploying MCP service to Cloud Run...\n"; \
+	gcloud run services replace services/mcp/service.yaml --platform managed --region $(GCP_REGION)
+
+prod-release-frontend: gcp-auth-check build ## Build, push and deploy production Frontend service
+	@printf "\nDiscovering live API URL...\n"
+	@API_URL=$$(gcloud run services describe rook-notes-api --platform managed --region $(GCP_REGION) --format="value(status.url)"); \
+	if [ -z "$$API_URL" ]; then echo "Error: Could not retrieve API service URL." && exit 1; fi; \
+	printf "API live URL discovered: $$API_URL\n"; \
+	printf "Building production Frontend container...\n"; \
+	docker build -t $(REGISTRY)/frontend:latest -f services/frontend/Dockerfile .; \
+	printf "Pushing Frontend image to Artifact Registry...\n"; \
+	docker push $(REGISTRY)/frontend:latest; \
+	printf "Compiling declarative service definition...\n"; \
+	sed -e "s|GCP_REGION_PLACEHOLDER|$(GCP_REGION)|g" \
+	    -e "s|REGISTRY_PLACEHOLDER|$(REGISTRY)|g" \
+	    -e "s|DEPLOY_TIMESTAMP_PLACEHOLDER|$(TIMESTAMP)|g" \
+	    -e "s|API_URL_PLACEHOLDER|$$API_URL|g" \
+	    services/frontend/service.template.yaml > services/frontend/service.yaml; \
+	printf "Deploying Frontend service to Cloud Run...\n"; \
+	gcloud run services replace services/frontend/service.yaml --platform managed --region $(GCP_REGION)
+
+prod-release-all: prod-release-api prod-release-mcp prod-release-frontend ## Release all services in order (API -> MCP & Frontend)
+	@printf "\nAll services deployed successfully!\n"

@@ -1,39 +1,39 @@
 ## 1. Local CLI Pre-requisites & Setup
 
-- [ ] 1.1 Install Google Cloud SDK (`google-cloud-sdk`) on the host Mac via Homebrew (`brew install --cask google-cloud-sdk`)
-- [ ] 1.2 Authenticate the local gcloud CLI (`gcloud auth login`) and list available Google Cloud organizations (`gcloud organizations list`) to identify available organization IDs
-- [ ] 1.3 **USER SIGN-OFF**: Explicitly output the list of detected Google Cloud organization IDs and wait for the user to review and confirm the correct billing-enabled Organization ID before proceeding
-- [ ] 1.4 Create the dedicated GCP project (e.g., `rook-notes-prod`) targeting the user-approved organization ID and bind it as active (`gcloud config set project`)
-- [ ] 1.5 Ensure the dedicated GCP project is linked to an active billing account (required to unlock Cloud Run Free Tier) and enable the required APIs: Cloud Run, Artifact Registry, and Secret Manager
-- [ ] 1.6 Configure the local Docker engine credential helper for secure Google Artifact Registry communication (`gcloud auth configure-docker`)
-- [ ] 1.7 Append generated Knative service manifests (`services/*/service.yaml`) to the repository root `.gitignore` to prevent tracking of dynamic deployment targets
-- [ ] 1.8 Optimize the repository root `.dockerignore` file, ignoring raw `src/` directories, `node_modules`, and local development databases (`data/`) to speed up local OrbStack build context transfer rates
+- [x] 1.1 Install Google Cloud SDK (`google-cloud-sdk`) on the host Mac via Homebrew (`brew install --cask google-cloud-sdk`)
+- [x] 1.2 Authenticate the local gcloud CLI (`gcloud auth login`) and list available Google Cloud organizations (`gcloud organizations list`) to identify available organization IDs
+- [x] 1.3 **USER SIGN-OFF**: Explicitly output the list of detected Google Cloud organization IDs and wait for the user to review and confirm the correct billing-enabled Organization ID before proceeding
+- [x] 1.4 Create the dedicated GCP project (e.g., `rook-notes-prod`) targeting the user-approved organization ID and bind it as active (`gcloud config set project`)
+- [x] 1.5 Ensure the dedicated GCP project is linked to an active billing account (required to unlock Cloud Run Free Tier) and enable the required APIs: Cloud Run, Artifact Registry, and Secret Manager
+- [x] 1.6 Configure the local Docker engine credential helper for secure Google Artifact Registry communication (`gcloud auth configure-docker`)
+- [x] 1.7 Append generated Knative service manifests (`services/*/service.yaml`) to the repository root `.gitignore` to prevent tracking of dynamic deployment targets
+- [x] 1.8 Optimize the repository root `.dockerignore` file, ignoring raw `src/` directories, `node_modules`, and local development databases (`data/`) to speed up local OrbStack build context transfer rates
 
 
 
 
 ## 2. Declarative Service Templates & Dockerfile Refactoring
 
-- [ ] 2.1 Create `services/api/service.template.yaml` specifying container port `3001`, resource limits, environment variables, and the `DEPLOY_TIMESTAMP_PLACEHOLDER` annotation to bypass the Cloud Run revision cache trap
-- [ ] 2.2 Create `services/mcp/service.template.yaml` specifying container port `3002`, resource limits, `API_BASE_URL_PLACEHOLDER` downstream routing key, and the dynamic deploy-timestamp annotation
-- [ ] 2.3 Create `services/frontend/service.template.yaml` specifying container port `80`, resource limits, Nginx upstream `API_URL_PLACEHOLDER` downstream routing key, and the dynamic deploy-timestamp annotation
-- [ ] 2.4 Refactor `services/api/Dockerfile` to standardize copying `services/api/dist/index.js` relative to the repository root `.` build context
-- [ ] 2.5 Refactor `services/mcp/Dockerfile` to standardize copying `services/mcp/dist/index.js` relative to the repository root `.` build context
-- [ ] 2.6 Refactor `services/frontend/Dockerfile` to standardize copying `services/frontend/nginx.conf.template` and compiled static files `services/frontend/dist` relative to the repository root `.` build context
+- [x] 2.1 Create `services/api/service.template.yaml` specifying container port `3001`, resource limits, environment variables, and the `DEPLOY_TIMESTAMP_PLACEHOLDER` annotation to bypass the Cloud Run revision cache trap
+- [x] 2.2 Create `services/mcp/service.template.yaml` specifying container port `3002`, resource limits, `API_BASE_URL_PLACEHOLDER` downstream routing key, and the dynamic deploy-timestamp annotation
+- [x] 2.3 Create `services/frontend/service.template.yaml` specifying container port `80`, resource limits, Nginx upstream `API_URL_PLACEHOLDER` downstream routing key, and the dynamic deploy-timestamp annotation
+- [x] 2.4 Refactor `services/api/Dockerfile` to standardize copying `services/api/dist/index.js` relative to the repository root `.` build context
+- [x] 2.5 Refactor `services/mcp/Dockerfile` to standardize copying `services/mcp/dist/index.js` relative to the repository root `.` build context
+- [x] 2.6 Refactor `services/frontend/Dockerfile` to standardize copying `services/frontend/nginx.conf.template` and compiled static files `services/frontend/dist` relative to the repository root `.` build context
 
 ## 3. Makefile Upgrades & Release Integration
 
-- [ ] 3.1 Integrate GCP configuration environment variables (`GCP_PROJECT`, `GCP_REGION`, `REGISTRY`) and a dynamic seconds timestamp (`TIMESTAMP = $(shell date +%s)`) inside the root `Makefile`
-- [ ] 3.2 Implement `gcp-auth-check` pre-flight target checking active `gcloud` project authentication
-- [ ] 3.3 Implement `prod-release-api` target executing `pnpm build`, local container packaging using root-relative path contexts (`docker build -f services/api/Dockerfile .`), registry push, `sed` placeholder replacement, and Knative `service.yaml` replacement
-- [ ] 3.4 Implement `prod-release-mcp` target using `gcloud run services describe rook-notes-api` to discover the live URL, compile `service.yaml` via `sed`, build, push, and replace
-- [ ] 3.5 Implement `prod-release-frontend` target using `gcloud run services describe rook-notes-api` to discover the live URL, compile `service.yaml` via `sed`, build, push, and replace
-- [ ] 3.6 Implement unified orchestrator target `prod-release-all` to chain all three service updates in correct order (API -> MCP & Frontend)
+- [x] 3.1 Integrate GCP configuration environment variables (`GCP_PROJECT`, `GCP_REGION`, `REGISTRY`) and a dynamic seconds timestamp (`TIMESTAMP = $(shell date +%s)`) inside the root `Makefile`
+- [x] 3.2 Implement `gcp-auth-check` pre-flight target checking active `gcloud` project authentication
+- [x] 3.3 Implement `prod-release-api` target executing `pnpm build`, local container packaging using root-relative path contexts (`docker build -f services/api/Dockerfile .`), registry push, `sed` placeholder replacement, and Knative `service.yaml` replacement
+- [x] 3.4 Implement `prod-release-mcp` target using `gcloud run services describe rook-notes-api` to discover the live URL, compile `service.yaml` via `sed`, build, push, and replace
+- [x] 3.5 Implement `prod-release-frontend` target using `gcloud run services describe rook-notes-api` to discover the live URL, compile `service.yaml` via `sed`, build, push, and replace
+- [x] 3.6 Implement unified orchestrator target `prod-release-all` to chain all three service updates in correct order (API -> MCP & Frontend)
 
 ## 4. Documentation Alignment & Guide Updates
 
-- [ ] 4.1 Refactor `DEPLOYMENT.md` by completely deleting legacy Section 3 (Git Pollution / GitHub PR trigger release instructions) and Section 4 (Web UI console trigger setup)
-- [ ] 4.2 Update `DEPLOYMENT.md` with comprehensive, CLI-first documentation, explicitly detailing the two release workflows: **Path A (Standard Production Release from `main`)** and **Path B (Instant Staging Deployment from feature branches)**
-- [ ] 4.3 Update `ARCHITECTURE.md` to reflect `service.template.yaml` file additions in the project structure diagram and document the local-packaging-remote-deploy pipeline in Section 6
+- [x] 4.1 Refactor `DEPLOYMENT.md` by completely deleting legacy Section 3 (Git Pollution / GitHub PR trigger release instructions) and Section 4 (Web UI console trigger setup)
+- [x] 4.2 Update `DEPLOYMENT.md` with comprehensive, CLI-first documentation, explicitly detailing the two release workflows: **Path A (Standard Production Release from `main`)** and **Path B (Instant Staging Deployment from feature branches)**
+- [x] 4.3 Update `ARCHITECTURE.md` to reflect `service.template.yaml` file additions in the project structure diagram and document the local-packaging-remote-deploy pipeline in Section 6
 
 
