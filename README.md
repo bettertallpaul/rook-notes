@@ -13,6 +13,8 @@ Rook Notes serves as a clean development environment designed for architectural 
 - **Opt-In Intelligence:** Tag suggestions using the Google Gemini API, keeping AI features strictly additive to control token spend.
 - **Stateless Validation:** Relies on Zod as the singular source of truth across frontend, backend API, and agent schema layers.
 - **Interactive API Documentation:** Full suite of testing and development capabilities through an embedded Scalar UI.
+- **Pure Local Container Delivery:** Standardizes co-equal, single-stage production Docker containers using version-controlled, parameterized Knative configurations to deploy zero-downtime, subsecond cold-start services directly to Google Cloud Run via CLI.
+
 
 ## Quick Start
 
@@ -97,6 +99,10 @@ The workspace manages daily tasks through a unified Makefile interface.
 | `make purge` | Deep clean environment (removes images, volumes, and `node_modules`). |
 | `make seed` | Repopulate standard test data via seed script. |
 | `make fresh` | Composite command to wipe, rebuild, and re-seed (`purge` -> `up` -> `seed`). |
+| `make prod-verify` | Verify production Docker containers locally by building, running, and testing connectivity. |
+| `make prod-release-all` | Chain production releases: builds, pushes to Artifact Registry, and deploys to Cloud Run. |
+| `make prod-urls` | Query Google Cloud Run dynamically and print the active public production URLs. |
+
 
 ## Associated Documentation
 
@@ -104,4 +110,6 @@ Refer to the following deep-dive documentation tracks for specialized maintenanc
 
 - **[ARCHITECTURE.md](ARCHITECTURE.md):** Deep-level system mappings, data flow, schema contracts, and infrastructure layout optimized for technical ingestion.
 - **[DESIGN.md](DESIGN.md):** Style guidelines, color palettes, typography scales, and UI component philosophy.
-- **[Plans Directory](plans/):** Historical audit trail, upcoming product requirements, and active roadmap milestones.
+- **[DEPLOYMENT.md](DEPLOYMENT.md):** Production deployment architecture, local verification workflows, and declarative Google Cloud Run release processes.
+- **[BACKLOG.md](BACKLOG.md):** Active project task list organizing near-term implementations, future enhancements, and historically completed features.
+- **[Plans Directory](plans/):** Archive of historical audit trails and early product requirement documents. *Note: This directory is no longer actively maintained as active design specifications have moved to [OpenSpec](openspec/), but it remains a valuable reference for future AI milestones (e.g., semantic RAG and intelligent deduplication).*
