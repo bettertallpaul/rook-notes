@@ -67,7 +67,7 @@ export function LabelEditor({ noteId, labels }: LabelEditorProps) {
   }
 
   const acceptSuggestion = (name: string) => {
-    addLabel(noteId, name)
+    addLabel(noteId, name, 'ai')
     if (aiSuggestions) {
       setAiSuggestions({
         existing: aiSuggestions.existing.filter(s => s !== name),

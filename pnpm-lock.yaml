@@ -63,6 +63,12 @@ importers:
 
   services/frontend:
     dependencies:
+      '@growthbook/growthbook':
+        specifier: ^1.6.5
+        version: 1.6.5
+      '@growthbook/growthbook-react':
+        specifier: ^1.6.5
+        version: 1.6.5(react@18.3.1)
       '@rook/shared':
         specifier: workspace:*
         version: link:../shared
@@ -78,6 +84,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      js-cookie:
+        specifier: ^3.0.5
+        version: 3.0.8
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -97,6 +106,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.0.0
         version: 4.2.1(vite@5.4.21(@types/node@25.4.0)(lightningcss@1.31.1))
+      '@types/js-cookie':
+        specifier: ^3.0.6
+        version: 3.0.6
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.28
@@ -588,6 +600,16 @@ packages:
   '@google/design.md@0.1.1':
     resolution: {integrity: sha512-S5xdF4DrELQwY2186vishZ9ZHxzMo7eikM8FHFNDS87oULElLDF5eko33DPCXtWyzEPyzkZWuUTpm/M0pPtbNQ==}
     hasBin: true
+
+  '@growthbook/growthbook-react@1.6.5':
+    resolution: {integrity: sha512-afi/RUbwazVNKv2acn6wDQz4BJNRAEpwIuHfggQup2/aE5PLAxy3+95gjjRMgCcPR0Pf3sFmhYGvOmxLD0ZRbQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: ^16.8.0-0 || ^17.0.0-0 || ^18.0.0-0 || ^19.0.0-0
+
+  '@growthbook/growthbook@1.6.5':
+    resolution: {integrity: sha512-mUaMsgeUTpRIUOTn33EUXHRK6j7pxBjwqH4WpQyq+pukjd1AIzWlEa6w7i6bInJUcweGgP2beXZmaP6b6UPn7A==}
+    engines: {node: '>=10'}
 
   '@hono/node-server@1.19.11':
     resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
@@ -1168,6 +1190,9 @@ packages:
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==}
 
+  '@types/js-cookie@3.0.6':
+    resolution: {integrity: sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==}
+
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
 
@@ -1450,6 +1475,10 @@ packages:
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
 
+  dom-mutator@0.6.0:
+    resolution: {integrity: sha512-iCt9o0aYfXMUkz/43ZOAUFQYotjGB+GNbYJiJdz4TgXkyToXbbRy5S6FbTp72lRBtfpUMwEc1KmpFEU4CZeoNg==}
+    engines: {node: '>=10'}
+
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
@@ -1715,6 +1744,9 @@ packages:
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
+
+  js-cookie@3.0.8:
+    resolution: {integrity: sha512-yeJd4aNAdYZQjaon2bpD/Gb0B/omw7HQOsynXXcOiWVCacbBcPlgn8S/d1X6blFSaHao7ozqtW7NZW19xpCtIw==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -2921,6 +2953,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@growthbook/growthbook-react@1.6.5(react@18.3.1)':
+    dependencies:
+      '@growthbook/growthbook': 1.6.5
+      react: 18.3.1
+
+  '@growthbook/growthbook@1.6.5':
+    dependencies:
+      dom-mutator: 0.6.0
+
   '@hono/node-server@1.19.11(hono@4.12.7)':
     dependencies:
       hono: 4.12.7
@@ -3465,6 +3506,8 @@ snapshots:
 
   '@types/http-errors@2.0.5': {}
 
+  '@types/js-cookie@3.0.6': {}
+
   '@types/linkify-it@5.0.0': {}
 
   '@types/markdown-it@14.1.2':
@@ -3712,6 +3755,8 @@ snapshots:
   devlop@1.1.0:
     dependencies:
       dequal: 2.0.3
+
+  dom-mutator@0.6.0: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -4024,6 +4069,8 @@ snapshots:
   jose@6.2.1: {}
 
   joycon@3.1.1: {}
+
+  js-cookie@3.0.8: {}
 
   js-tokens@4.0.0: {}
 
