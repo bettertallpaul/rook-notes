@@ -2,10 +2,16 @@ import { useEffect } from 'react'
 import { Sidebar } from './components/layout/Sidebar'
 import { MainPanel } from './components/layout/MainPanel'
 import { useNoteStore } from './store/useNoteStore'
+import { trackEvent } from './lib/growthbook'
 
 export function App() {
   const fetchNotes = useNoteStore(s => s.fetchNotes)
   const loaded = useNoteStore(s => s.loaded)
+
+  useEffect(() => {
+    trackEvent('session_start')
+    trackEvent('page_view')
+  }, [])
 
   useEffect(() => {
     fetchNotes()

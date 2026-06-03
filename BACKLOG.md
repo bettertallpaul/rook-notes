@@ -1,16 +1,19 @@
 # Project Backlog
 
 ## Now
-- [ ] **AI Milestone 2: Chat with my Vault:** Build semantic search and RAG integration to enable natural language queries over the knowledge base. Spec's out with opsx.
+- [x] **Integrate Growthbook:** Install Growthbook SDK and use it to track events and feature flags.
 
 ## Next
+- [ ] **Feature Flag End-to-End Test:** Implement basic feature flag test to verify the feature flag system.
 - [ ] **Include noindex instructions** to prevent live instances from being indexed by search engines.
 - [ ] **Extend `make prod-verify` with dynamic feature assertions:** Go beyond basic infrastructure smoke checks (port accessibility) by implementing lightweight integration tests that assert actual note CRUD operations and basic MCP tool functionality against the running production container suite before teardown.
 
 ## Later
+- [ ] **Refactor GB to Decouple Integration:** Implement facade pattern to decouple tracking/implementation from core app logic. Consider GTM implementation to populate data layer and how to also send to managed warehouse.
 - [ ] **Fix `make test` execution:** Add a `"test"` script to `package.json` so that the `make test` command successfully executes tests inside the container instead of failing with a missing script error.
 - [ ] **Expand AI Evaluations:** Determine if the taxonomy evaluations need more test cases (beyond the current two synthetic cases in `dataset.json`) to thoroughly benchmark tag suggestions.
 - [ ] **Integrate `make test-ai`:** Include a specific `test-ai` target in the `Makefile` and decide whether to keep LLM evaluations separate from standard core application testing (`make test`).
+- [ ] **AI Milestone 2: Chat with my Vault:** Build semantic search and RAG integration to enable natural language queries over the knowledge base. Spec's out with opsx.
 - [ ] **AI Milestone 3: Intelligent Deduplication:** Implement agentic workflow to proactively surface and resolve redundant note content.
 
 ## Completed

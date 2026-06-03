@@ -124,6 +124,21 @@ flowchart TD
 
 - **Google Gemini AI API:** Used for AI taxonomy (tag suggestions). Requires `GOOGLE_GENERATIVE_AI_API_KEY` in environment variables.
 - **Claude Code / MCP Clients:** External AI tools can consume the system via the exposed `streamable-http` MCP endpoint.
+- **GrowthBook React SDK & Telemetry:** Integrated into the frontend client to enable feature flags, A/B testing, and user telemetry. It connects to GrowthBook's Managed Warehouse by sending events directly to the GrowthBook ingestion API.
+  - **Environment Variables:**
+    - `VITE_GROWTHBOOK_CLIENT_KEY`: The client SDK key loaded in the React application context.
+  - **Telemetry Event Taxonomy:**
+    - `session_start`: Dispatched when the React application mounts for the first time.
+    - `page_view`: Dispatched on initial mount to track page entry.
+    - `note_created`: Dispatched when a new note is created (payload: `{ noteId: string }`).
+    - `note_deleted`: Dispatched when a note is deleted (payload: `{ noteId: string }`).
+    - `label_added`: Dispatched when a label is added to a note (payload: `{ noteId: string, label: string, source: 'user' | 'ai' }`).
+    - `ai_tags_suggested`: Dispatched when a user accepts an AI-suggested label (payload: `{ noteId: string, label: string, source: 'ai' }`).
+    - `label_removed`: Dispatched when a label is removed from a note (payload: `{ noteId: string, label: string }`).
+    - `lifecycle_filter_selected`: Dispatched when clicking sidebar lifecycle filters (payload: `{ filter: string }` e.g., Active, Archived, Trash).
+    - `label_filter_selected`: Dispatched when filtering by a specific label name (payload: `{ label: string }`).
+    - `search`: Dispatched with a 500ms debounce when the user searches notes (payload: `{ query: string }`).
+    - `Experiment Viewed`: Dispatched when a user is exposed to a feature flag experiment or Visual Editor experiment (payload: `{ experimentId: string, variationId: string }`).
 
 ## 6. Deployment & Infrastructure
 

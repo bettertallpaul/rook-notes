@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Note, SortMode, LifecycleFilter } from '../types/note'
+import { trackEvent, trackSearchDebounced } from '../lib/growthbook'
 
 interface NoteStore {
   notes: Record<string, Note>
@@ -20,7 +21,7 @@ interface NoteStore {
   setActiveNote: (id: string | null) => void
   toggleSelected: (id: string) => void
   clearSelection: () => void
-  addLabel: (id: string, label: string) => void
+  addLabel: (id: string, label: string, source?: 'user' | 'ai') => void
   removeLabel: (id: string, label: string) => void
   suggestTags: (id: string) => Promise<{ existing: string[], new: string[] }>
   setSearchQuery: (q: string) => void
@@ -54,6 +55,7 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
     const res = await api('/notes', { method: 'POST', body: JSON.stringify({}) })
     const note: Note = await res.json()
     set(s => ({ notes: { ...s.notes, [note.id]: note } }))
+    trackEvent('note_created', { noteId: note.id })
     return note.id
   },
 
@@ -90,6 +92,7 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
       }
     })
     api(`/notes/${id}`, { method: 'DELETE' })
+    trackEvent('note_deleted', { noteId: id })
   },
 
   deleteNotes: (ids) => {
@@ -102,7 +105,10 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
         selectedIds: new Set<string>(),
       }
     })
-    for (const id of ids) api(`/notes/${id}`, { method: 'DELETE' })
+    for (const id of ids) {
+      api(`/notes/${id}`, { method: 'DELETE' })
+      trackEvent('note_deleted', { noteId: id })
+    }
   },
 
   setActiveNote: (id) => {
@@ -129,7 +135,7 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
 
   clearSelection: () => set({ selectedIds: new Set<string>() }),
 
-  addLabel: (id, label) => {
+  addLabel: (id, label, source = 'user') => {
     set(s => {
       const note = s.notes[id]
       if (!note || note.labels.includes(label)) return s
@@ -138,6 +144,10 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
       }
     })
     api(`/notes/${id}/labels`, { method: 'POST', body: JSON.stringify({ name: label }) })
+    if (source === 'ai') {
+      trackEvent('ai_tags_suggested', { noteId: id, label, source })
+    }
+    trackEvent('label_added', { noteId: id, label, source })
   },
 
   removeLabel: (id, label) => {
@@ -149,6 +159,7 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
       }
     })
     api(`/notes/${id}/labels/${encodeURIComponent(label)}`, { method: 'DELETE' })
+    trackEvent('label_removed', { noteId: id, label })
   },
 
   suggestTags: async (id: string) => {
@@ -160,8 +171,19 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
     return res.json()
   },
 
-  setSearchQuery: (q) => set({ searchQuery: q }),
+  setSearchQuery: (q) => {
+    set({ searchQuery: q })
+    trackSearchDebounced(q)
+  },
   setSortMode: (mode) => set({ sortMode: mode }),
-  setLifecycleFilter: (f) => set({ lifecycleFilter: f }),
-  setActiveLabelFilter: (label) => set({ activeLabelFilter: label }),
+  setLifecycleFilter: (f) => {
+    set({ lifecycleFilter: f })
+    trackEvent('lifecycle_filter_selected', { filter: f })
+  },
+  setActiveLabelFilter: (label) => {
+    set({ activeLabelFilter: label })
+    if (label !== null) {
+      trackEvent('label_filter_selected', { label })
+    }
+  },
 }))
