@@ -1,7 +1,6 @@
 # Project Backlog
 
 ## Now
-- [x] **Integrate Growthbook:** Install Growthbook SDK and use it to track events and feature flags.
 
 ## Next
 - [ ] **Feature Flag End-to-End Test:** Implement basic feature flag test to verify the feature flag system.
@@ -10,6 +9,7 @@
 
 ## Later
 - [ ] **Refactor GB to Decouple Integration:** Implement facade pattern to decouple tracking/implementation from core app logic. Consider GTM implementation to populate data layer and how to also send to managed warehouse.
+- [ ] **Explore Google Cloud Run sidecar to simplify deployment** instead of publishing all 3 containers and orchestrating using custom makefile targets. Might not be worth the effort.
 - [ ] **Fix `make test` execution:** Add a `"test"` script to `package.json` so that the `make test` command successfully executes tests inside the container instead of failing with a missing script error.
 - [ ] **Expand AI Evaluations:** Determine if the taxonomy evaluations need more test cases (beyond the current two synthetic cases in `dataset.json`) to thoroughly benchmark tag suggestions.
 - [ ] **Integrate `make test-ai`:** Include a specific `test-ai` target in the `Makefile` and decide whether to keep LLM evaluations separate from standard core application testing (`make test`).
@@ -20,6 +20,7 @@
 
 | Completion Date | Task | Notes |
 | - | - | - |
+| 2026-06-03 | Integrate Growthbook | Installed Growthbook SDK and configured event tracking and feature flags. |
 | 2026-06-01 | Refactor build process for simplicity and speed | Transitioned to a pure local container delivery flow using OrbStack, registry push, and declarative Knative Service manifests. |
 | 2026-06-01 | Deploy Backend Services | Package and deploy Express API and MCP servers to Google Cloud Run. Ultimately moving away from this approach. |
 | 2026-05-31 | Refactor Label Schema | Simplified labels architecture by removing the legacy `source` field and refactored labels to be a clean array of strings (`string[]`) across schemas, store, API backend, and MCP server. |
