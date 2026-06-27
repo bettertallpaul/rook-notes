@@ -8,8 +8,7 @@
 - [ ] **Extend `make prod-verify` with dynamic feature assertions:** Go beyond basic infrastructure smoke checks (port accessibility) by implementing lightweight integration tests that assert actual note CRUD operations and basic MCP tool functionality against the running production container suite before teardown.
 
 ## Later
-- [ ] **Try GB Self-Hosted and standup own DB:**
-- [ ] **Refactor GB to Decouple Integration:** Implement facade pattern to decouple tracking/implementation from core app logic. Consider GTM implementation to populate data layer and how to also send to managed warehouse.
+- [ ] **Decouple GB Event Tracking Integration:** Implement facade pattern to decouple tracking/implementation from core app logic. Consider GTM implementation to populate data layer and how to also send to managed warehouse.
 - [ ] **Explore Google Cloud Run sidecar to simplify deployment** instead of publishing all 3 containers and orchestrating using custom makefile targets. Might not be worth the effort.
 - [ ] **Fix `make test` execution:** Add a `"test"` script to `package.json` so that the `make test` command successfully executes tests inside the container instead of failing with a missing script error.
 - [ ] **Expand AI Evaluations:** Determine if the taxonomy evaluations need more test cases (beyond the current two synthetic cases in `dataset.json`) to thoroughly benchmark tag suggestions.
@@ -22,6 +21,7 @@
 
 | Completion Date | Task | Notes |
 | - | - | - |
+| 2026-06-27 | Migrate GCP config to .env | Moved GCP_PROJECT and GCP_REGION from Makefile to gitignored .env, removed default fallbacks to prevent public repo exposure, and updated README instructions. |
 | 2026-06-03 | Integrate Growthbook | Installed Growthbook SDK and configured event tracking and feature flags. |
 | 2026-06-01 | Refactor build process for simplicity and speed | Transitioned to a pure local container delivery flow using OrbStack, registry push, and declarative Knative Service manifests. |
 | 2026-06-01 | Deploy Backend Services | Package and deploy Express API and MCP servers to Google Cloud Run. Ultimately moving away from this approach. |
