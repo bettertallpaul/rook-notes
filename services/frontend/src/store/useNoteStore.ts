@@ -55,7 +55,7 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
     const res = await api('/notes', { method: 'POST', body: JSON.stringify({}) })
     const note: Note = await res.json()
     set(s => ({ notes: { ...s.notes, [note.id]: note } }))
-    trackEvent('note_created', { noteId: note.id })
+    trackEvent('note_created')
     return note.id
   },
 
@@ -92,7 +92,7 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
       }
     })
     api(`/notes/${id}`, { method: 'DELETE' })
-    trackEvent('note_deleted', { noteId: id })
+    trackEvent('note_deleted')
   },
 
   deleteNotes: (ids) => {
@@ -107,7 +107,7 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
     })
     for (const id of ids) {
       api(`/notes/${id}`, { method: 'DELETE' })
-      trackEvent('note_deleted', { noteId: id })
+      trackEvent('note_deleted')
     }
   },
 
@@ -145,9 +145,9 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
     })
     api(`/notes/${id}/labels`, { method: 'POST', body: JSON.stringify({ name: label }) })
     if (source === 'ai') {
-      trackEvent('ai_tags_suggested', { noteId: id, label, source })
+      trackEvent('ai_tags_suggested', { label, source })
     }
-    trackEvent('label_added', { noteId: id, label, source })
+    trackEvent('label_added', { label, source })
   },
 
   removeLabel: (id, label) => {
@@ -159,7 +159,7 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
       }
     })
     api(`/notes/${id}/labels/${encodeURIComponent(label)}`, { method: 'DELETE' })
-    trackEvent('label_removed', { noteId: id, label })
+    trackEvent('label_removed', { label })
   },
 
   suggestTags: async (id: string) => {
@@ -178,12 +178,12 @@ export const useNoteStore = create<NoteStore>()((set, get) => ({
   setSortMode: (mode) => set({ sortMode: mode }),
   setLifecycleFilter: (f) => {
     set({ lifecycleFilter: f })
-    trackEvent('lifecycle_filter_selected', { filter: f })
+    trackEvent('sidebar_filter_selected', { filterType: 'lifecycle', filterValue: f })
   },
   setActiveLabelFilter: (label) => {
     set({ activeLabelFilter: label })
     if (label !== null) {
-      trackEvent('label_filter_selected', { label })
+      trackEvent('sidebar_filter_selected', { filterType: 'label' })
     }
   },
 }))

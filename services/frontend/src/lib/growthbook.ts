@@ -33,6 +33,7 @@ growthbook.init({
 });
 
 export function trackEvent(eventName: string, properties?: Record<string, any>) {
+  console.log("[Telemetry Event]", eventName, properties);
   growthbook.logEvent(eventName, properties);
 }
 

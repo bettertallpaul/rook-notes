@@ -9,11 +9,6 @@ import type { Note } from '@rook/shared'
  *  - autoLabels    → already exist in other notes (familiar term, safe to auto-apply)
  *  - suggestedLabels → novel to the corpus (surface as 1-click confirm)
  */
-/**
- * Classifies AI-returned label strings into:
- *  - autoLabels    → already exist in other notes (familiar term, safe to auto-apply)
- *  - suggestedLabels → novel to the corpus (surface as 1-click confirm)
- */
 export function classifyLabels(newLabels: string[]): { autoLabels: string[]; suggestedLabels: string[] } {
   const allNotes = listNotes()
   const knownLabelNames = new Set(

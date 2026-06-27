@@ -130,13 +130,12 @@ flowchart TD
   - **Telemetry Event Taxonomy:**
     - `session_start`: Dispatched when the React application mounts for the first time.
     - `page_view`: Dispatched on initial mount to track page entry.
-    - `note_created`: Dispatched when a new note is created (payload: `{ noteId: string }`).
-    - `note_deleted`: Dispatched when a note is deleted (payload: `{ noteId: string }`).
-    - `label_added`: Dispatched when a label is added to a note (payload: `{ noteId: string, label: string, source: 'user' | 'ai' }`).
-    - `ai_tags_suggested`: Dispatched when a user accepts an AI-suggested label (payload: `{ noteId: string, label: string, source: 'ai' }`).
-    - `label_removed`: Dispatched when a label is removed from a note (payload: `{ noteId: string, label: string }`).
-    - `lifecycle_filter_selected`: Dispatched when clicking sidebar lifecycle filters (payload: `{ filter: string }` e.g., Active, Archived, Trash).
-    - `label_filter_selected`: Dispatched when filtering by a specific label name (payload: `{ label: string }`).
+    - `note_created`: Dispatched when a new note is created (no payload).
+    - `note_deleted`: Dispatched when a note is deleted (no payload).
+    - `label_added`: Dispatched when a label is added to a note (payload: `{ label: string, source: 'user' | 'ai' }`).
+    - `ai_tags_suggested`: Dispatched when a user accepts an AI-suggested label (payload: `{ label: string, source: 'ai' }`).
+    - `label_removed`: Dispatched when a label is removed from a note (payload: `{ label: string }`).
+    - `sidebar_filter_selected`: Dispatched when clicking sidebar filters (payload: `{ filterType: 'lifecycle', filterValue: 'all' | 'recent' | 'stale' }` or `{ filterType: 'label' }`).
     - `search`: Dispatched with a 500ms debounce when the user searches notes (payload: `{ query: string }`).
     - `Experiment Viewed`: Dispatched when a user is exposed to a feature flag experiment or Visual Editor experiment (payload: `{ experimentId: string, variationId: string }`).
 
