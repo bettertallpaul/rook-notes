@@ -27,14 +27,18 @@ Rook Notes serves as a clean development environment designed for architectural 
 ### Setup and Launch
 
 1. **Configure Environment**
-   Create a `.env` file in the project root with the following keys:
+   Create a `.env` file in the project root (using the template in [.env.example](.env.example)) with the following keys:
    ```env
-   GOOGLE_API_KEY=your_api_key_here
+   # Core Configuration
+   GOOGLE_API_KEY=your-api-key-here
+   AI_PROVIDER=google
    TAXONOMY_MODEL=gemini-2.5-flash-lite
+   AI_ENABLED=true
+   VITE_GROWTHBOOK_CLIENT_KEY=your-client-key-here
 
    # GCP Deployment Configuration
-   GCP_PROJECT=your_gcp_project_here
-   GCP_REGION=your_gcp_region_here
+   GCP_PROJECT=your-gcp-project-here
+   GCP_REGION=your-gcp-region-here
    ```
 
 2. **Boot the Stack**
