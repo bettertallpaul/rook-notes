@@ -2,11 +2,17 @@
 
 .DEFAULT_GOAL := help
 
+# Load environment variables from .env if it exists
+ifneq (,$(wildcard .env))
+    include .env
+    export $(shell grep -E '^[A-Za-z0-9_]+=' .env | cut -d= -f1)
+endif
+
 # ==========================================
 # --- GCP DEPLOYMENT CONFIGURATION ---
 # ==========================================
-GCP_PROJECT ?= rook-notes-prod
-GCP_REGION ?= us-central1
+GCP_PROJECT ?=
+GCP_REGION ?=
 REGISTRY ?= $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/rook-notes
 TIMESTAMP = $(shell date +%s)
 
